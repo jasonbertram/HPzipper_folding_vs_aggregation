@@ -61,10 +61,6 @@ def mutate(sequence,position):
         temp[position]=1
     return temp
 
-def mutations(sequence,sample_size):
-    Finitial=F(sequence,sample_size)
-    return np.array([(F(mutate(sequence,position),sample_size)-Finitial)/Finitial for position in range(len(sequence))])
-
 def generate_initial_sequence(L,H):
     temp=np.array(L*[0])
     #1 for hydrophobic, 0 for polar

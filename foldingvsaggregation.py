@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import multiprocessing
 import time
 from function_definitions import *
 
-L=50
+pool=multiprocessing.Pool(6)
+
+L=48
 H=0.5
 sample_size=100
 
@@ -17,7 +20,9 @@ mutation_history=[]
 for i in range(100):
         print "Mutation number: ", i
         sequence_history.append(sequence)
-        mutation_effects=mutations(sequence,sample_size)
+    	Finitial=F(sequence,sample_size)
+        #mutation_effects=np.array(pool.map(lambda x: (F(mutate(sequence,x),sample_size)-Finitial)/Finitial, range(L)))
+        print pool.map(lambda x: (F(mutate(sequence,x),sample_size)-Finitial)/Finitial, range(L))
         beneficial_mutations=[position for position,_ in enumerate(mutation_effects) if _[0]>=0 and _[1]<=0]# and _[1]<=0]
         if len(beneficial_mutations)>0:
             #pick random beneficial mutation and mutate
@@ -37,10 +42,11 @@ for i in range(100):
             #else:
             break
 
-print time.time()-start
-
+print (time.time()-start)/60.
+"""
 import pickle
-with open("/N/dc2/scratch/jxb/L50S100",'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper",'w') as fout:
     pickle.dump(sequence_history,fout)
     pickle.dump(number_beneficial_history,fout)
     pickle.dump(mutation_history,fout)
+"""
