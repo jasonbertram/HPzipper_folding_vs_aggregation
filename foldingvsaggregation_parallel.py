@@ -6,7 +6,8 @@ from function_definitions import *
 L=64-1
 H=0.5
 sample_size=100
-alpha=0.25
+alpha=0.5
+print "alpha= ",alpha
 
 sequence=generate_initial_sequence(L,H)
 
@@ -21,16 +22,18 @@ sequence_history=[]
 number_beneficial_history=[]
 mutation_history=[]
 fitness_history=[]
-for i in range(1000):
+for i in range(400):
         print "Mutation number: ", i
         sequence_history.append(sequence)
         Fvalues=np.array(pool.map(Fpar, [mutate(sequence,_) for _ in range(L)]+[sequence]))
 	mutation_effects=(Fvalues[:-1,:-1]-Fvalues[-1,:-1])/Fvalues[-1,:-1]
-        beneficial_mutations=[position for position,_ in enumerate(mutation_effects) if (_[0]>=0 and _[1]<=alpha*_[0]) or (_[0]<0 and _[1]<=_[0]/alpha)]
+	beneficial_mutations=np.argsort(np.sum(np.array([1,-alpha])*mutation_effects,1))
+        #beneficial_mutations=[position for position,_ in enumerate(mutation_effects) if (_[0]>=0 and _[1]<=alpha*_[0]) or (_[0]<0 and _[1]<=_[0]/alpha)]
         number_beneficial_history.append(len(beneficial_mutations))
         if len(beneficial_mutations)>0:
             #pick random beneficial mutation and mutate
-            mutation_position=np.random.randint(len(beneficial_mutations))
+            #mutation_position=np.random.randint(len(beneficial_mutations))
+	    mutation_position=-1
             print 'Number beneficial:', number_beneficial_history[-1]
             print 'H or P mutated:', sequence[beneficial_mutations[mutation_position]]
             mutation_history.append(mutation_effects[beneficial_mutations[mutation_position]])
@@ -41,7 +44,7 @@ for i in range(1000):
 print (time.time()-start)/60.
 
 import pickle
-with open("/N/dc2/scratch/jxb/HPzipper/output03",'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output05",'w') as fout:
     pickle.dump(sequence_history,fout)
     pickle.dump(number_beneficial_history,fout)
     pickle.dump(mutation_history,fout)
