@@ -79,7 +79,7 @@ def routes(start,end,length):
         stepx=np.array([np.sign(diff[0]),0])
         stepy=np.array([0,np.sign(diff[1])])
 
-        for _ in itertools.combinations(xrange(length),int(abs(diff[1]))):
+        for _ in itertools.combinations(xrange(length),int(np.abs(diff[1]))):
             steps=np.array(length*[stepx])
             steps[list(_)]=stepy
             out.append(steps)

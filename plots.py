@@ -2,14 +2,15 @@ import matplotlib
 matplotlib.use('PDF')
 
 import matplotlib.pyplot as plt
-
 import numpy as np
 from function_definitions import *
+import sys
 import pickle
 
-with open("/N/dc2/scratch/jxb/HPzipper/output05",'r') as fin:
+with open(str(sys.argv[1]),'r') as fin:
+	alpha=pickle.load(fin)
         sequence_history=pickle.load(fin)
-        number_beneficial_history=pickle.load(fin)
+        beneficial_history=pickle.load(fin)
         mutation_history=np.array(pickle.load(fin))
         fitness_history=np.array(pickle.load(fin))
 
@@ -17,7 +18,15 @@ plt.matshow(np.array(sequence_history))
 plt.savefig("/N/dc2/scratch/jxb/HPzipper/sequence.pdf")
 
 plt.figure()
-plt.plot(number_beneficial_history)
+plt.plot([np.sum((sequence_history[0]-_)**2) for _ in sequence_history])
+plt.ylabel(r"Hamming Distance")
+plt.xlabel(r"Substitution")
+plt.savefig("/N/dc2/scratch/jxb/HPzipper/hamming.pdf")
+
+plt.figure()
+ordered_fitness=np.transpose(np.sum(beneficial_history*np.array([1,-alpha]),2))
+plt.plot(ordered_fitness)
+plt.plot(ordered_fitness,'.')
 plt.ylabel(r"Number of beneficial mutations (out of $L$=63)")
 plt.xlabel(r"Substitution")
 plt.savefig("/N/dc2/scratch/jxb/HPzipper/ben_mutations.pdf")
@@ -43,10 +52,10 @@ plt.savefig("/N/dc2/scratch/jxb/HPzipper/dispersion.pdf")
 
 plt.figure()
 plt.plot(fitness_history[:,:-1])
+plt.plot(np.sum(np.array([1,-alpha])*fitness_history[:,:-1],1),linewidth=2)
 plt.ylabel(r"F,A")
 plt.xlabel(r"Substitution")
 plt.savefig("/N/dc2/scratch/jxb/HPzipper/fitness.pdf")
-
 
 plt.figure()
 plt.plot(fitness_history[:,-1])
