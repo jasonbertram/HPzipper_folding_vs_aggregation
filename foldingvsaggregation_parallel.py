@@ -3,17 +3,18 @@ import pathos.multiprocessing as mp
 import time
 from function_definitions import *
 
-L=32-1
+L=48-1
 H=0.5
 sample_size=100
 alpha=0.35
 print "alpha= ",alpha
+print "L= ",L
 
 sequence=generate_initial_sequence(L,H)
 
 #for parallelization
 def Fpar(x):
-	return F(x,sample_size)
+	return F(x,sample_size,alpha)
 
 pool=mp.Pool(16)
 start=time.time()
@@ -21,35 +22,36 @@ start=time.time()
 sequence_history=[]
 possible_mutation_history=[]
 mutation_history=[]
-fitness_history=[]
-possible_fitness_history=[]
-for i in range(1000):
+structure_history=[]
+local_peaking_times=[]
+for i in range(200):
         print "Mutation number: ", i
         sequence_history.append(sequence)
         Fvalues=np.array(pool.map(Fpar, [mutate(sequence,_) for _ in range(L)]+[sequence]))
-	mutation_effects=(Fvalues[:-1,:-1]-Fvalues[-1,:-1])/Fvalues[-1,:-1]
-	possible_mutations=np.argsort(np.sum(np.array([1,-alpha])*mutation_effects,1))
-	possible_fitness_history=np.sum(np.array([1,-alpha])*mutation_effects,1)[possible_mutations]
-	possible_mutation_history.append(mutation_effects[possible_mutations])
-        #possible_mutations=[position for position,_ in enumerate(mutation_effects) if (_[0]>=0 and _[1]<=alpha*_[0]) or (_[0]<0 and _[1]<=_[0]/alpha)]
-        if len([_ for _ in possible_fitness_history if _>=0.])==0:
-            mutation_position=np.random.randint(len(possible_mutations))
+	original_fitness=np.sum(Fvalues[-1,:-1])
+	mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
+	mutation_effects=(mutant_fitnesses-original_fitness)/original_fitness
+	possible_mutation_history.append(mutation_effects)
+        if np.max(mutation_effects)<0:
+            mutation_position=np.random.randint(L)
+	    local_peaking_times.append(i)
 	else:
-	    mutation_position=-1
-            mutation_history.append(mutation_effects[possible_mutations[mutation_position]])
-            print 'Mutation effect: ', mutation_history[-1]
-	    fitness_history.append(Fvalues[possible_mutations[mutation_position]])
-            sequence=mutate(sequence,possible_mutations[mutation_position])
+	    mutation_position=np.argmax(mutation_effects)
+        mutation_history.append(mutation_effects[mutation_position])
+        print 'Mutation effect: ', mutation_history[-1]
+	structure_history.append(Fvalues[mutation_position])
+        sequence=mutate(sequence,mutation_position)
 
 print (time.time()-start)/60.
 
 import cPickle
-with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha),'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L),'w') as fout:
     cPickle.dump(alpha,fout)
     cPickle.dump(sequence_history,fout)
     cPickle.dump(possible_mutation_history,fout)
     cPickle.dump(mutation_history,fout)
-    cPickle.dump(fitness_history,fout)
+    cPickle.dump(structure_history,fout)
+    cPickle.dump(local_peaking_times,fout)
 
 
 """

@@ -196,6 +196,7 @@ def HPzip(sequence,nucleation_contact):
     contact_count=1
     while 1:
         #matrix of shortest paths from the Dijkstra algorithm
+        #ideally should filter before dijkstra to get a little extra speed
         shortest_paths=csgraph.dijkstra(contact_graph)
         leftbase=min(zipped)
         rightbase=max(zipped)
@@ -242,7 +243,7 @@ def HPzip(sequence,nucleation_contact):
 def zipped_structure(sequence):
     contact_count_global=0
     H_exposure_global={position:2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1}
-    zipped_global=set({})
+    zipped_global=set()
     while 1:
         possible_nucleations=np.array([[position,position+3] for position,_ in enumerate(sequence[:-3])
             if all(sequence[[position,position+3]]) and len({position,position+3}.intersection(zipped_global))==0])
@@ -276,16 +277,17 @@ def zipped_structure(sequence):
                 
     return contact_count_global, np.sum(H_exposure_global.values()),len(zipped_global)/float(len(sequence))
             
-def F(sequence,sample_size):
+def F(sequence,sample_size,alpha):
     contact_counts=np.zeros(sample_size)
     exposure_counts=np.zeros(sample_size)
     percent_ordered=np.zeros(sample_size)
     for _ in xrange(sample_size):
         contact_counts[_],exposure_counts[_],percent_ordered[_]=zipped_structure(sequence)
     
+    exposure_counts=-exposure_counts*alpha
     combined=np.array(zip(contact_counts,exposure_counts,percent_ordered))
-    combined_sort_trunc=combined#[combined[:,0].argsort()]#[-1:]#[int(sample_size/4.):]
-    return np.mean(combined_sort_trunc,0)
+    #combined_sort_trunc=combined#[combined[:,0].argsort()]#[-1:]#[int(sample_size/4.):]
+    return np.mean(combined,0)
 
 def plot_folded_structure(sequence,locations):
     fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
