@@ -7,9 +7,11 @@ Created on Fri Feb 22 15:12:13 2019
 """
 
 from scipy.sparse import csgraph
+from scipy.sparse import diags
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import deque
 
 def initial_fold(sequence):
     return np.concatenate([sequence[:1],[sequence[position] for position in xrange(1,len(sequence)-2) if any(sequence[position-1:position+2]-np.array([1,0,1]))],sequence[-1:]])
@@ -74,7 +76,7 @@ def neighbors(location):
 def routes(start,end,length):
     diff=end-start
     distance=np.sum(np.abs(diff))
-    out=[]
+    out=deque()
     if length==distance:
         stepx=np.array([np.sign(diff[0]),0])
         stepy=np.array([0,np.sign(diff[1])])
@@ -91,16 +93,14 @@ def routes(start,end,length):
             steps=(length-1)/2*[_*longstep]+[diff]+(length-1)/2*[-1*_*longstep]
             out.append(steps)
 
-    return np.array(out)
+    return out
 
 #for a given candidate contact, 
 #returns a valid conformation of the unzipped strand(s), if one exists
-def unzipped_conformations(contact,occupied_locations,locations,zipped):
-    leftbase=min(zipped)
-    rightbase=max(zipped)
-    valid_paths=[]
+def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,L):
+    valid_paths=deque()
     #branches sticking together
-    if contact[0] not in zipped and contact[1] not in zipped:
+    if contact[0]<leftbase and contact[1]>rightbase:
         orientation=np.array([1,1])-np.abs(locations[leftbase]-locations[rightbase])
 
         possible_receiving_locations=np.array([[locations[leftbase]+_*orientation,locations[rightbase]+_*orientation] for _ in [-1,1]])
@@ -112,7 +112,7 @@ def unzipped_conformations(contact,occupied_locations,locations,zipped):
             return {'left':[],'right':[]}
     #one branch sticking to the zipped structure
     else:
-        if contact[1] in zipped:
+        if contact[0]<leftbase:
             attaching_H=contact[0]
             receiving_H=contact[1]
             base=leftbase
@@ -126,8 +126,8 @@ def unzipped_conformations(contact,occupied_locations,locations,zipped):
             code="right"
             
         #check where other branch is to make sure it isn't blocked
-        otherbranch_locations=np.array([_ for _ in neighbors(locations[otherbase]) if occupied_locations[_[0],_[1]]==-1])
-        if len(otherbranch_locations)==1:
+        if contacts_all[otherbase]==1+int(otherbase==L-1)+int(otherbase==0):
+            otherbranch_locations=np.array([_ for _ in neighbors(locations[otherbase]) if occupied_locations[_[0],_[1]]==-1])
             otherbranch_constrained=True
             otherbranch_location=otherbranch_locations[0]          
         else:
@@ -137,7 +137,7 @@ def unzipped_conformations(contact,occupied_locations,locations,zipped):
         valid_paths=[]
         for end in receiving_locations:
             for route in routes(locations[base],end,np.abs(base-attaching_H)):
-                path=[locations[base]]
+                path=deque([locations[base]])
                 valid=True
 
                 for step in route:
@@ -146,17 +146,19 @@ def unzipped_conformations(contact,occupied_locations,locations,zipped):
                             valid=False
                             break
 
-                    path=path+[next_location]
+                    path.append(next_location)
 
                 if valid==True:
-                    valid_paths.append(path[1:])
-
+                    path.popleft()
+                    valid_paths.append(path)
+                 
+        valid_paths=np.array(valid_paths)
         if len(valid_paths)==2:
             path_choice=np.argmin([np.sum((_[-1]-locations[otherbase])**2) for _ in valid_paths])
             valid_paths=valid_paths[path_choice]
         elif len(valid_paths)==1:
             valid_paths=valid_paths[0]
-
+        
         if code=='left':
             return {'left':valid_paths,'right':[]}
         else:
@@ -166,17 +168,13 @@ def unzipped_conformations(contact,occupied_locations,locations,zipped):
 def HPzip(sequence,nucleation_contact):
     L=len(sequence)
     #track number of contacts for each HP residue
-    #contacts_HH={position:0 for position,residue in enumerate(sequence) if residue==1}
     contacts_all={position:0 for position,residue in enumerate(sequence)}
+    contacts_all[nucleation_contact[0]]=1
+    contacts_all[nucleation_contact[1]]=1
 
     #construct directed adjacency matrix for contact graph
-    contact_graph=np.array([[int(y==x+1) for y in range(L)] for x in range(L)])
-    contact_graph[nucleation_contact[0],nucleation_contact[1]]=1.
-    
-    #contacts_HH[nucleation_contact[0]]=contacts_HH[nucleation_contact[0]]+1
-    #contacts_HH[nucleation_contact[1]]=contacts_HH[nucleation_contact[1]]+1
-    contacts_all[nucleation_contact[0]]=contacts_all[nucleation_contact[0]]+1
-    contacts_all[nucleation_contact[1]]=contacts_all[nucleation_contact[1]]+1
+    contact_graph=diags((L-1)*[1],1,format='lil',dtype=np.int8)
+    contact_graph[nucleation_contact[0],nucleation_contact[1]]=1
     
     #track zipped H residues
     zipped=set(range(nucleation_contact[0],nucleation_contact[1]+1))
@@ -199,24 +197,23 @@ def HPzip(sequence,nucleation_contact):
     while 1:
         #matrix of shortest paths from the Dijkstra algorithm
         shortest_paths=csgraph.dijkstra(contact_graph)
-         
+        leftbase=min(zipped)
+        rightbase=max(zipped)
         candidate_contacts=np.array([[x,y] for (x,y),z in np.ndenumerate(shortest_paths) 
-            if z==3. and x>=min(zipped)-3 and y<=max(zipped)+3 #effective contact order of 3 and no new nucleations
+            if z==3. and x>=leftbase-3 and y<=rightbase+3 #effective contact order of 3 and no new nucleations
             and all(sequence[[x,y]]) and (x not in zipped or y not in zipped) #both H and at least one unzipped  
             and (contacts_all[x]<=1+int(x==L-1)+int(x==0) and contacts_all[y]<=1+int(y==L-1)+int(y==0))]) #not full
 
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
         for position,contact in enumerate(candidate_contacts):
-            valid_conformation=unzipped_conformations(contact,occupied_locations,locations,zipped)
-            if len(valid_conformation['left']) or len(valid_conformation['right'])>0:
+            valid_conformation=unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,L)
+            if len(valid_conformation['left'])>0 or len(valid_conformation['right'])>0:
                 possible_contacts[position]=valid_conformation
 
         if len(possible_contacts)>0:
             new_contact=possible_contacts.keys()[np.random.randint(len(possible_contacts))]
 
-            leftbase=min(zipped)
-            rightbase=max(zipped)
             increment_rule={'left':[leftbase,-1],'right':[rightbase,1]}
             for branch in ['left','right']:
                 position=increment_rule[branch][0]
@@ -233,11 +230,7 @@ def HPzip(sequence,nucleation_contact):
                             contacts_all[neighbor_position]=contacts_all[neighbor_position]+1
                             
                             if all(sequence[[position,neighbor_position]]):
-                                    contact_graph[min([position,neighbor_position]),max([position,neighbor_position])]=1.
-                
-                                    #contacts_HH[position]=contacts_HH[position]+1
-                                    #contacts_HH[neighbor_position]=contacts_HH[neighbor_position]+1
-                                    
+                                    contact_graph[min([position,neighbor_position]),max([position,neighbor_position])]=1                    
                                     contact_count=contact_count+1
                         
         else:

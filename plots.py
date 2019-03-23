@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from function_definitions import *
 import sys
-import pickle
+import cPickle
 
 with open(str(sys.argv[1]),'r') as fin:
-	alpha=pickle.load(fin)
-        sequence_history=pickle.load(fin)
-        beneficial_history=pickle.load(fin)
-        mutation_history=np.array(pickle.load(fin))
-        fitness_history=np.array(pickle.load(fin))
+	alpha=cPickle.load(fin)
+        sequence_history=cPickle.load(fin)
+        beneficial_history=cPickle.load(fin)
+        mutation_history=np.array(cPickle.load(fin))
+        fitness_history=np.array(cPickle.load(fin))
 
 plt.matshow(np.array(sequence_history))
 plt.savefig("/N/dc2/scratch/jxb/HPzipper/sequence.pdf")
