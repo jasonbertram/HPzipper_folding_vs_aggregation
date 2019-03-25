@@ -14,7 +14,7 @@ sequence=generate_initial_sequence(L,H)
 
 #for parallelization
 def Fpar(x):
-	return F(x,sample_size,alpha)
+	return F(x,alpha,sample_size)
 
 pool=mp.Pool(16)
 start=time.time()
@@ -24,7 +24,7 @@ possible_mutation_history=[]
 mutation_history=[]
 structure_history=[]
 local_peaking_times=[]
-for i in range(200):
+for i in range(100):
         print "Mutation number: ", i
         sequence_history.append(sequence)
         Fvalues=np.array(pool.map(Fpar, [mutate(sequence,_) for _ in range(L)]+[sequence]))

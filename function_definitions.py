@@ -237,7 +237,7 @@ def HPzip(sequence,nucleation_contact):
         else:
             break
 
-    return contact_count,contacts_all,zipped#,locations
+    return contact_count,contacts_all,zipped,locations
 
 
 def zipped_structure(sequence,possible_nucleations,nucleation_position):
@@ -262,7 +262,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
     
         working_sequence=sequence[left_bound:right_bound]
         
-        contact_count,contacts_all,zipped=HPzip(working_sequence,nucleation_contact-left_bound)
+        contact_count,contacts_all,zipped,_=HPzip(working_sequence,nucleation_contact-left_bound)
         contact_count_global=contact_count_global+contact_count
       
         for _ in zipped:
@@ -285,7 +285,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
                 
     return contact_count_global, np.sum(H_exposure_global.values()),len(zipped_global)/float(len(sequence))
             
-def F(sequence,sample_size):
+def F(sequence,alpha,sample_size):
     contact_counts=np.zeros(sample_size)
     exposure_counts=np.zeros(sample_size)
     percent_ordered=np.zeros(sample_size)
@@ -298,18 +298,25 @@ def F(sequence,sample_size):
         contact_counts[count],exposure_counts[count],percent_ordered[count]=zipped_structure(sequence,possible_nucleations,_)
         count=count+1
     
+    exposure_counts=-alpha*exposure_counts
     combined=np.array(zip(contact_counts,exposure_counts,percent_ordered))
     return np.mean(combined,0)
 
-def plot_folded_structure(sequence,locations):
-    fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
-    plt.figure()
-    plt.axes().set_aspect('equal')
-    plt.plot(fold_graph[:,0],fold_graph[:,1],'k')
-    col_map={0:'w',1:'k'}
-    for _ in locations:
-        plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
-        plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=10,markeredgecolor='k')
+def plot_folded_structure(sequence):
+    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
+    for _ in range(len(possible_nucleations)):
+        nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
+        a,b,c,locations=HPzip(sequence,nucleation_contact)
+        fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
+        plt.figure()
+        plt.axes().set_aspect('equal')
+        plt.plot(fold_graph[:,0],fold_graph[:,1],'k')
+        col_map={0:'w',1:'k'}
+        plt.plot([len(sequence)],[len(sequence)],'r',markersize=10,markeredgecolor='r')
+        for _ in locations:
+            plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
+            plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=10,markeredgecolor='k')
+            plt.axis('off')
 
     plt.show()
     
