@@ -3,10 +3,10 @@ import pathos.multiprocessing as mp
 import time
 from function_definitions import *
 
-L=48-1
+L=32-1
 H=0.5
-sample_size=100
-alpha=0.35
+sample_size=1000
+alpha=0.3
 print "alpha= ",alpha
 print "L= ",L
 
@@ -30,7 +30,7 @@ for i in range(100):
         Fvalues=np.array(pool.map(Fpar, [mutate(sequence,_) for _ in range(L)]+[sequence]))
 	original_fitness=np.sum(Fvalues[-1,:-1])
 	mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
-	mutation_effects=(mutant_fitnesses-original_fitness)/original_fitness
+	mutation_effects=(mutant_fitnesses-original_fitness)
 	possible_mutation_history.append(mutation_effects)
         if np.max(mutation_effects)<0:
             mutation_position=np.random.randint(L)

@@ -199,18 +199,25 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
         left_end=-1
         
     right_end=total_length-left_bound-1
+    
+    Hpositions=[position for position,residue in enumerate(sequence) if residue==1]
+    
     #count of HH contacts
     contact_count=1
     while 1:
-        #matrix of shortest paths from the Dijkstra algorithm
-        #ideally should filter before dijkstra to get a little extra speed
-        shortest_paths=csgraph.dijkstra(contact_graph)
         leftbase=min(zipped)
         rightbase=max(zipped)
-        candidate_contacts=np.array([[x,y] for (x,y),z in np.ndenumerate(shortest_paths) 
-            if z==3. and x>=leftbase-3 and y<=rightbase+3 #effective contact order of 3 and no new nucleations
-            and all(sequence[[x,y]]) and (x not in zipped or y not in zipped) #both H and at least one unzipped  
-            and (contacts_all[x]<=1+int(x==L-1)+int(x==0) and contacts_all[y]<=1+int(y==right_end)+int(y==left_end))]) #not full
+        candidate_nodes=[_ for _ in Hpositions if _>=leftbase-3 and _<=rightbase #no new nucleations
+                         and contacts_all[_]<=1+int(_==right_end)+int(_==left_end)] #not full
+        
+        #print candidate_nodes
+        #matrix of shortest paths
+        shortest_paths=csgraph.dijkstra(contact_graph,indices=candidate_nodes)
+        
+        #print shortest_paths
+
+        candidate_contacts=np.array([[candidate_nodes[x],y] for (x,y),z in np.ndenumerate(shortest_paths) 
+            if z==3. and (candidate_nodes[x] not in zipped or y not in zipped) and sequence[y]==1]) #effective contact order of 3 and at least one unzipped
 
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
@@ -305,9 +312,13 @@ def F(sequence,alpha,sample_size):
         contact_counts[count],exposure_counts[count],percent_ordered[count]=zipped_structure(sequence,possible_nucleations,_)
         count=count+1
     
+    #plt.hist(contact_counts)
+    #plt.figure()
+    #plt.hist(exposure_counts)
+    
     exposure_counts=-alpha*exposure_counts
     combined=np.array(zip(contact_counts,exposure_counts,percent_ordered))
-    return np.mean(combined,0)
+    return np.mean(combined,0)-4*np.array([np.std(combined[:,0]),0,0])
 
 def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
