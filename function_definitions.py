@@ -97,7 +97,7 @@ def routes(start,end,length):
 
 #for a given candidate contact, 
 #returns a valid conformation of the unzipped strand(s), if one exists
-def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,L):
+def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,left_end,right_end):
     valid_paths=deque()
     #branches sticking together
     if contact[0]<leftbase and contact[1]>rightbase:
@@ -124,33 +124,34 @@ def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightba
             base=rightbase
             otherbase=leftbase
             code="right"
-            
+        
         #check where other branch is to make sure it isn't blocked
-        if contacts_all[otherbase]==1+int(otherbase==L-1)+int(otherbase==0):
+        if contacts_all[otherbase]==2 and otherbase!=left_end and otherbase!=right_end:
             otherbranch_locations=np.array([_ for _ in neighbors(locations[otherbase]) if occupied_locations[_[0],_[1]]==-1])
             otherbranch_constrained=True
-            otherbranch_location=otherbranch_locations[0]          
+            otherbranch_location=otherbranch_locations[0]    
         else:
             otherbranch_constrained=False
 
         receiving_locations=np.array([_ for _ in neighbors(locations[receiving_H]) if occupied_locations[_[0],_[1]]==-1])
         valid_paths=[]
         for end in receiving_locations:
-            for route in routes(locations[base],end,np.abs(base-attaching_H)):
-                path=deque([locations[base]])
-                valid=True
-
-                for step in route:
-                    next_location=path[-1]+step
-                    if occupied_locations[next_location[0],next_location[1]]>=0 or (otherbranch_constrained and not any(otherbranch_location-next_location)):
-                            valid=False
-                            break
-
-                    path.append(next_location)
-
-                if valid==True:
-                    path.popleft()
-                    valid_paths.append(path)
+            if len([_ for _ in neighbors(end) if occupied_locations[_[0],_[1]]==-1])>1-int(attaching_H==right_end)+int(attaching_H==left_end):
+                for route in routes(locations[base],end,np.abs(base-attaching_H)):
+                    path=deque([locations[base]])
+                    valid=True
+    
+                    for step in route:
+                        next_location=path[-1]+step
+                        if occupied_locations[next_location[0],next_location[1]]>=0 or (otherbranch_constrained and not any(otherbranch_location-next_location)):
+                                valid=False
+                                break
+    
+                        path.append(next_location)
+    
+                    if valid==True:
+                        path.popleft()
+                        valid_paths.append(path)
                  
         valid_paths=np.array(valid_paths)
         if len(valid_paths)==2:
@@ -165,7 +166,7 @@ def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightba
             return {'left':[],'right':valid_paths}
 
 #zip for a given nucleation until zipper gets stuck
-def HPzip(sequence,nucleation_contact):
+def HPzip(sequence,nucleation_contact,total_length,left_bound):
     L=len(sequence)
     #track number of contacts for each HP residue
     contacts_all={position:0 for position,residue in enumerate(sequence)}
@@ -192,6 +193,12 @@ def HPzip(sequence,nucleation_contact):
                nucleation_contact[0]+2:np.array([L+1,L+1]),
                nucleation_contact[1]:np.array([L+1,L])}
     
+    if left_bound==0:
+        left_end=0
+    else:
+        left_end=-1
+        
+    right_end=total_length-left_bound-1
     #count of HH contacts
     contact_count=1
     while 1:
@@ -203,12 +210,12 @@ def HPzip(sequence,nucleation_contact):
         candidate_contacts=np.array([[x,y] for (x,y),z in np.ndenumerate(shortest_paths) 
             if z==3. and x>=leftbase-3 and y<=rightbase+3 #effective contact order of 3 and no new nucleations
             and all(sequence[[x,y]]) and (x not in zipped or y not in zipped) #both H and at least one unzipped  
-            and (contacts_all[x]<=1+int(x==L-1)+int(x==0) and contacts_all[y]<=1+int(y==L-1)+int(y==0))]) #not full
+            and (contacts_all[x]<=1+int(x==L-1)+int(x==0) and contacts_all[y]<=1+int(y==right_end)+int(y==left_end))]) #not full
 
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
         for position,contact in enumerate(candidate_contacts):
-            valid_conformation=unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,L)
+            valid_conformation=unzipped_conformations(contact,occupied_locations,locations,leftbase,rightbase,contacts_all,left_end,right_end)
             if len(valid_conformation['left'])>0 or len(valid_conformation['right'])>0:
                 possible_contacts[position]=valid_conformation
 
@@ -262,7 +269,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
     
         working_sequence=sequence[left_bound:right_bound]
         
-        contact_count,contacts_all,zipped,_=HPzip(working_sequence,nucleation_contact-left_bound)
+        contact_count,contacts_all,zipped,_=HPzip(working_sequence,nucleation_contact-left_bound,len(sequence),left_bound)
         contact_count_global=contact_count_global+contact_count
       
         for _ in zipped:
@@ -306,7 +313,7 @@ def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
-        a,b,c,locations=HPzip(sequence,nucleation_contact)
+        a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
         fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
         plt.figure()
         plt.axes().set_aspect('equal')
