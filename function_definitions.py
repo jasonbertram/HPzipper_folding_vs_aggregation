@@ -136,7 +136,7 @@ def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightba
         receiving_locations=np.array([_ for _ in neighbors(locations[receiving_H]) if occupied_locations[_[0],_[1]]==-1])
         valid_paths=[]
         for end in receiving_locations:
-            if len([_ for _ in neighbors(end) if occupied_locations[_[0],_[1]]==-1])>1-int(attaching_H==right_end)+int(attaching_H==left_end):
+            if len([_ for _ in neighbors(end) if occupied_locations[_[0],_[1]]==-1])>1-int(attaching_H==right_end)-int(attaching_H==left_end):
                 for route in routes(locations[base],end,np.abs(base-attaching_H)):
                     path=deque([locations[base]])
                     valid=True
@@ -317,14 +317,16 @@ def F(sequence,alpha,sample_size):
     #plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
-    combined=np.array(zip(contact_counts,exposure_counts,percent_ordered))
-    return np.mean(combined,0)-4*np.array([np.std(combined[:,0]),0,0])
+    contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
+    exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
+    return np.array([np.mean(contact_counts_trunc),np.mean(exposure_counts_trunc),np.mean(percent_ordered)])
 
 def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
         a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
+        #print a
         fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
         plt.figure()
         plt.axes().set_aspect('equal')
