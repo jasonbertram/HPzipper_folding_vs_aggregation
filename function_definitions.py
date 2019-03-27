@@ -287,8 +287,9 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
       
         unzipped_nucleation_positions=unzipped_nucleation_positions[:left_zipped_nucleation]+unzipped_nucleation_positions[right_zipped_nucleation:]
         
-        for _ in [position for position,residue in enumerate(working_sequence) if residue==1]:
-            H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
+        for _,residue in enumerate(working_sequence):
+            if residue==1:
+                H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
           
         num_nucleations=len(unzipped_nucleation_positions)
         
@@ -311,15 +312,18 @@ def F(sequence,alpha,sample_size):
             break
         contact_counts[count],exposure_counts[count],percent_ordered[count]=zipped_structure(sequence,possible_nucleations,_)
         count=count+1
+        
+    if len(possible_nucleations)==0:
+        exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
     
     #plt.hist(contact_counts)
     #plt.figure()
     #plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
-    contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
-    exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
-    return np.array([np.mean(contact_counts_trunc),np.mean(exposure_counts_trunc),np.mean(percent_ordered)])
+    #contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
+    #exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
+    return np.array([np.mean(contact_counts),np.mean(exposure_counts),np.mean(percent_ordered)])
 
 def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
