@@ -136,10 +136,12 @@ def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightba
         receiving_locations=np.array([_ for _ in neighbors(locations[receiving_H]) if occupied_locations[_[0],_[1]]==-1])
         valid_paths=[]
         for end in receiving_locations:
-            if len([_ for _ in neighbors(end) if occupied_locations[_[0],_[1]]==-1])>1-int(attaching_H==right_end)-int(attaching_H==left_end):
+            if len([_ for _ in neighbors(end) if occupied_locations[_[0],_[1]]==-1]) \
+                >1-int(attaching_H==right_end)-int(attaching_H==left_end)-int(np.abs(attaching_H-base)==1):
                 for route in routes(locations[base],end,np.abs(base-attaching_H)):
                     path=deque([locations[base]])
                     valid=True
+                    #print route
     
                     for step in route:
                         next_location=path[-1]+step
@@ -210,15 +212,14 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
         candidate_nodes=[_ for _ in Hpositions if _>=leftbase-3 and _<=rightbase #no new nucleations
                          and contacts_all[_]<=1+int(_==right_end)+int(_==left_end)] #not full
         
-        #print candidate_nodes
+        print candidate_nodes
         #matrix of shortest paths
         shortest_paths=csgraph.dijkstra(contact_graph,indices=candidate_nodes)
         
-        #print shortest_paths
-
         candidate_contacts=np.array([[candidate_nodes[x],y] for (x,y),z in np.ndenumerate(shortest_paths) 
             if z==3. and (candidate_nodes[x] not in zipped or y not in zipped) and sequence[y]==1]) #effective contact order of 3 and at least one unzipped
-
+        
+        print candidate_contacts
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
         for position,contact in enumerate(candidate_contacts):
@@ -247,6 +248,7 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
                             if all(sequence[[position,neighbor_position]]):
                                     contact_graph[min([position,neighbor_position]),max([position,neighbor_position])]=1                    
                                     contact_count=contact_count+1
+                                    #print [position, neighbor_position]
                         
         else:
             break
@@ -304,7 +306,7 @@ def F(sequence,alpha,sample_size):
     contact_counts=np.zeros(sample_size)
     exposure_counts=np.zeros(sample_size)
     percent_ordered=np.zeros(sample_size)
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
+    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][:1]
     #cycle through initating nucleation contacts to reduce sample variance
     count=0
     for _ in itertools.cycle(range(len(possible_nucleations))):
@@ -316,21 +318,20 @@ def F(sequence,alpha,sample_size):
     if len(possible_nucleations)==0:
         exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
     
-    #plt.hist(contact_counts)
-    #plt.figure()
-    #plt.hist(exposure_counts)
+#    plt.hist(contact_counts)
+#    plt.figure()
+#    plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
     #contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
     #exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
-    return np.array([np.mean(contact_counts),np.mean(exposure_counts),np.mean(percent_ordered)])
+    return np.array([np.mean(contact_counts),np.mean(exposure_counts),len(sequence)*np.mean(percent_ordered)])
 
 def plot_folded_structure(sequence):
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
+    possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
         a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
-        #print a
         fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
         plt.figure()
         plt.axes().set_aspect('equal')
