@@ -141,7 +141,6 @@ def unzipped_conformations(contact,occupied_locations,locations,leftbase,rightba
                 for route in routes(locations[base],end,np.abs(base-attaching_H)):
                     path=deque([locations[base]])
                     valid=True
-                    #print route
     
                     for step in route:
                         next_location=path[-1]+step
@@ -212,14 +211,12 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
         candidate_nodes=[_ for _ in Hpositions if _>=leftbase-3 and _<=rightbase #no new nucleations
                          and contacts_all[_]<=1+int(_==right_end)+int(_==left_end)] #not full
         
-        print candidate_nodes
         #matrix of shortest paths
         shortest_paths=csgraph.dijkstra(contact_graph,indices=candidate_nodes)
         
         candidate_contacts=np.array([[candidate_nodes[x],y] for (x,y),z in np.ndenumerate(shortest_paths) 
             if z==3. and (candidate_nodes[x] not in zipped or y not in zipped) and sequence[y]==1]) #effective contact order of 3 and at least one unzipped
         
-        print candidate_contacts
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
         for position,contact in enumerate(candidate_contacts):
@@ -248,8 +245,6 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
                             if all(sequence[[position,neighbor_position]]):
                                     contact_graph[min([position,neighbor_position]),max([position,neighbor_position])]=1                    
                                     contact_count=contact_count+1
-                                    #print [position, neighbor_position]
-                        
         else:
             break
 
@@ -284,14 +279,19 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
         for _ in zipped:
             zipped_global.add(_+left_bound)
         
-        left_zipped_nucleation=len([_ for _ in unzipped_nucleation_positions if possible_nucleations[_]+3<min(zipped)+left_bound])
-        right_zipped_nucleation=len([_ for _ in unzipped_nucleation_positions if possible_nucleations[_]<=max(zipped)+left_bound])
+        min_zipped=min(zipped)
+        max_zipped=max(zipped)
+        left_zipped_nucleation=len([_ for _ in unzipped_nucleation_positions if possible_nucleations[_]+3<min_zipped+left_bound])
+        right_zipped_nucleation=len([_ for _ in unzipped_nucleation_positions if possible_nucleations[_]<=max_zipped+left_bound])
       
         unzipped_nucleation_positions=unzipped_nucleation_positions[:left_zipped_nucleation]+unzipped_nucleation_positions[right_zipped_nucleation:]
         
         for _,residue in enumerate(working_sequence):
             if residue==1:
                 H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
+                
+        H_exposure_global[min_zipped+left_bound]=H_exposure_global[min_zipped+left_bound]+1
+        H_exposure_global[max_zipped+left_bound]=H_exposure_global[max_zipped+left_bound]+1
           
         num_nucleations=len(unzipped_nucleation_positions)
         
@@ -325,10 +325,10 @@ def F(sequence,alpha,sample_size):
     exposure_counts=-alpha*exposure_counts
     #contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
     #exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
-    return np.array([np.mean(contact_counts),np.mean(exposure_counts),len(sequence)*np.mean(percent_ordered)])
+    return np.array([np.mean(contact_counts),np.mean(exposure_counts),np.mean(percent_ordered)])
 
 def plot_folded_structure(sequence):
-    possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
+    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][:1]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
         a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
