@@ -10,7 +10,6 @@ from scipy.sparse import csgraph
 from scipy.sparse import diags
 import itertools
 import numpy as np
-import matplotlib.pyplot as plt
 from collections import deque
 
 def initial_fold(sequence):
@@ -306,7 +305,7 @@ def F(sequence,alpha,sample_size):
     contact_counts=np.zeros(sample_size)
     exposure_counts=np.zeros(sample_size)
     percent_ordered=np.zeros(sample_size)
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][:1]
+    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
     #cycle through initating nucleation contacts to reduce sample variance
     count=0
     for _ in itertools.cycle(range(len(possible_nucleations))):
@@ -318,9 +317,9 @@ def F(sequence,alpha,sample_size):
     if len(possible_nucleations)==0:
         exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
     
-#    plt.hist(contact_counts)
-#    plt.figure()
-#    plt.hist(exposure_counts)
+    #plt.hist(contact_counts)
+    #plt.figure()
+    #plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
     #contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
@@ -328,7 +327,7 @@ def F(sequence,alpha,sample_size):
     return np.array([np.mean(contact_counts),np.mean(exposure_counts),np.mean(percent_ordered)])
 
 def plot_folded_structure(sequence):
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][:1]
+    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
         a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
@@ -346,18 +345,3 @@ def plot_folded_structure(sequence):
     plt.show()
     
     return
-
-
-
-#==========================================
-#old fudges
-#==========================================
-#def F(sequence):
-#    H=np.sum(sequence)
-#    return (1/H)*np.sum([np.sum([1./np.abs(posx-posy)**3 for posx,x in enumerate(sequence) if x==1 and np.abs(posx-posy)>1]) for posy,y in enumerate(sequence) if y==1])
-
-#def A(sequence):
-#    runlengths=run_lengths_phobic(initial_fold(sequence))
-#    #runlengths=run_lengths_phobic(sequence)
-#    return np.sum([(i+1)**2*runlengths[i] for i in range(len(runlengths))])/np.sum(runlengths)
-
