@@ -11,6 +11,7 @@ from scipy.sparse import diags
 import itertools
 import numpy as np
 from collections import deque
+import matplotlib.pyplot as plt
 
 def initial_fold(sequence):
     return np.concatenate([sequence[:1],[sequence[position] for position in xrange(1,len(sequence)-2) if any(sequence[position-1:position+2]-np.array([1,0,1]))],sequence[-1:]])
@@ -317,14 +318,12 @@ def F(sequence,alpha,sample_size):
     if len(possible_nucleations)==0:
         exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
     
-    #plt.hist(contact_counts)
-    #plt.figure()
-    #plt.hist(exposure_counts)
+#    plt.hist(contact_counts)
+#    plt.figure()
+#    plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
-    #contact_counts_trunc=contact_counts[np.argsort(contact_counts)]#[-sample_size/10:]
-    #exposure_counts_trunc=exposure_counts[np.argsort(exposure_counts)]#[:sample_size/10]
-    return np.array([np.mean(contact_counts),np.mean(exposure_counts),np.mean(percent_ordered)])
+    return np.array([np.mean(contact_counts),np.mean(exposure_counts),len(sequence)*(1-np.mean(percent_ordered))])
 
 def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]

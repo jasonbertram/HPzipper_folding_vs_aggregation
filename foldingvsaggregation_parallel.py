@@ -3,8 +3,14 @@ from function_definitions import *
 from dask import compute,delayed
 import dask.multiprocessing
 
-L=32-1
-H=0.5
+#from dask.distributed import Client
+#from dask_mpi import initialize
+
+#initialize()
+#client=Client()
+
+L=48-1
+H=0.7
 sample_size=1000
 alpha=1.
 print "alpha=",alpha
@@ -19,7 +25,7 @@ start=time.time()
 sequence_history=[generate_initial_sequence(L,H)]
 possible_mutation_history=[]
 structure_history=[]
-for i in range(10):
+for i in range(50):
         print "Mutation number: ", i
         values=[delayed(Fpar)(x) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
         Fvalues=np.array(compute(*values, scheduler='processes'))
@@ -59,14 +65,17 @@ for i in range(10):
             structure_history.append(Fvalues[mutation_position])
             sequence_history.append(mutate(sequence_history[-1],mutation_position))
 
+
+print (time.time()-start)/60
+
 import cPickle
 with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L),'w') as fout:
     cPickle.dump(alpha,fout)
     cPickle.dump(sequence_history,fout)
     cPickle.dump(possible_mutation_history,fout)
-    cPickle.dump(mutation_history,fout)
+    #cPickle.dump(mutation_history,fout)
     cPickle.dump(structure_history,fout)
-    cPickle.dump(local_peaking_times,fout)
+    #cPickle.dump(local_peaking_times,fout)
 
 """
 
