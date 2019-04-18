@@ -9,10 +9,10 @@ import dask.multiprocessing
 #initialize()
 #client=Client()
 
-L=48-1
+L=32-1
 H=0.7
 sample_size=1000
-alpha=1.
+alpha=0.6
 print "alpha=",alpha
 print "L=",L
 
@@ -29,8 +29,8 @@ for i in range(50):
         print "Mutation number: ", i
         values=[delayed(Fpar)(x) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
         Fvalues=np.array(compute(*values, scheduler='processes'))
-        original_fitness=np.sum(Fvalues[-1,:-1])
-        mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
+        original_fitness=np.sum(Fvalues[-1,:])
+        mutant_fitnesses=np.sum(Fvalues[:-1,:],1)
         mutation_effects=(mutant_fitnesses-original_fitness)
         possible_mutation_history.append(mutation_effects)
         if np.max(mutation_effects)<0:
@@ -41,7 +41,7 @@ for i in range(50):
                 Fvalues2ndorder.append(np.array(compute(*values, scheduler='processes')))
 
             Fvalues2ndorder=np.array(Fvalues2ndorder)
-            mutant_fitnesses2ndorder=np.sum(Fvalues2ndorder[:,:,:-1],2)
+            mutant_fitnesses2ndorder=np.sum(Fvalues2ndorder[:,:,:],2)
             possible_valleys=np.array([[first,second,fval] for first,_ in enumerate(mutant_fitnesses2ndorder) for second,fval in enumerate(_) if np.max(_)>original_fitness and fval>original_fitness])
             
             if len(possible_valleys)==0:
@@ -69,7 +69,7 @@ for i in range(50):
 print (time.time()-start)/60
 
 import cPickle
-with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L),'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+str(int(time.time()))[-4:],'w') as fout:
     cPickle.dump(alpha,fout)
     cPickle.dump(sequence_history,fout)
     cPickle.dump(possible_mutation_history,fout)

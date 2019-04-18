@@ -290,8 +290,8 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
             if residue==1:
                 H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
                 
-        H_exposure_global[min_zipped+left_bound]=H_exposure_global[min_zipped+left_bound]+1
-        H_exposure_global[max_zipped+left_bound]=H_exposure_global[max_zipped+left_bound]+1
+        #H_exposure_global[min_zipped+left_bound]=H_exposure_global[min_zipped+left_bound]+1
+        #H_exposure_global[max_zipped+left_bound]=H_exposure_global[max_zipped+left_bound]+1
           
         num_nucleations=len(unzipped_nucleation_positions)
         
@@ -323,7 +323,7 @@ def F(sequence,alpha,sample_size):
 #    plt.hist(exposure_counts)
     
     exposure_counts=-alpha*exposure_counts
-    return np.array([np.mean(contact_counts),np.mean(exposure_counts),len(sequence)*(1-np.mean(percent_ordered))])
+    return np.array([np.mean(contact_counts),np.mean(exposure_counts),-len(sequence)*(1-np.mean(percent_ordered))])
 
 def plot_folded_structure(sequence):
     possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
