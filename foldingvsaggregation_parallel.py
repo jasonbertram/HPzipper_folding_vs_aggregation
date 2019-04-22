@@ -3,6 +3,7 @@ from function_definitions import *
 from dask import compute,delayed
 import dask.multiprocessing
 import cPickle
+import sys
 
 #from dask.distributed import Client
 #from dask_mpi import initialize
@@ -10,7 +11,8 @@ import cPickle
 #initialize()
 #client=Client()
 
-L=48-1
+L=int(sys.argv[1])-1
+#L=64-1
 H=0.7
 sample_size=1000
 num_sequences=10
@@ -18,9 +20,6 @@ alpha=0.6
 print "alpha=",alpha
 print "L=",L
 
-#for parallelization
-def Fpar(x):
-	return F(x,alpha,sample_size)
 
 start=time.time()
 
@@ -33,7 +32,7 @@ for j in range(num_sequences):
     structure_history=[]
     for i in range(100):
             print "Mutation number: ", i
-            values=[delayed(Fpar)(x) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
+            values=[delayed(F,pure=True,traverse=False)(x,alpha,sample_size) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
             Fvalues=np.array(compute(*values, scheduler='processes'))
             original_fitness=np.sum(Fvalues[-1,:-1])
             mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
@@ -74,7 +73,7 @@ for j in range(num_sequences):
                 #Get better estimate of current fitness
                 #===========================
                 
-                values=[delayed(Fpar)(sequence_history[-1]) for _ in range(L+1)]
+                values=[delayed(F,pure=True,traverse=False)(sequence_history[-1],alpha,sample_size) for _ in range(L+1)]
                 Fcurrentvalues=np.array(compute(*values, scheduler='processes'))
                 current_fitnesses=np.sum(Fcurrentvalues[:,:-1],1)
                 original_fitness=np.mean(current_fitnesses)
