@@ -16,7 +16,7 @@ L=int(sys.argv[1])-1
 H=0.7
 sample_size=1000
 num_sequences=10
-alpha=0.6
+alpha=0.3
 print "alpha=",alpha
 print "L=",L
 
@@ -97,6 +97,7 @@ with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'
 #    cPickle.dump(sequence_history,fout)
 #    cPickle.dump(possible_mutation_history,fout)
 #    cPickle.dump(structure_history,fout)
+    cPickle.dump(L,fout)
     cPickle.dump(evolved_sequences,fout)
     cPickle.dump(evolved_structures,fout)
 
