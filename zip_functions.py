@@ -11,49 +11,6 @@ from scipy.sparse import diags
 import itertools
 import numpy as np
 from collections import deque
-import matplotlib.pyplot as plt
-
-def initial_fold(sequence):
-    return np.concatenate([sequence[:1],[sequence[position] for position in xrange(1,len(sequence)-2) if any(sequence[position-1:position+2]-np.array([1,0,1]))],sequence[-1:]])
-
-def run_lengths_phobic(sequence_hydro):
-    counts=np.zeros(len(sequence_hydro))
-    first_hydrophobic=next(x for x,y in enumerate(sequence_hydro) if y==1)
-    prev=1
-    running_count=0
-    phobicity_flag=1
-    for amino in sequence_hydro[first_hydrophobic+1:]:
-        if amino != prev:
-            if phobicity_flag>0:
-                counts[running_count]=counts[running_count]+1
-            phobicity_flag=-1*phobicity_flag
-            running_count=0
-        else:
-            running_count=running_count+1
-        prev=amino
-    if phobicity_flag>0:
-        counts[running_count]=counts[running_count]+1
-    return counts
-
-def dispersion_all_phases(sequence,window):
-    length=float(len(sequence))
-    sequence=2*sequence-np.ones(len(sequence))
-    dispersion=0
-    for phase in range(window):
-        numblocks=np.floor((length-phase)/window)
-        L=window*numblocks
-        block_sums=np.array([np.sum(sequence[phase+window*_:phase+window*(_+1)]) for _ in range(int(numblocks))])
-        M=np.sum(block_sums)
-        if L**2==M**2 or numblocks<=1:
-            dispersion=0
-        else:
-            dispersion=dispersion+(L-1)/((L**2-M**2)*(1-1/numblocks))*sum((block_sums-M/numblocks)**2)
-
-    return dispersion/window
-
-def mean_runlength(sequence):
-    runlengths=run_lengths_phobic(sequence)
-    return np.sum([(i+1)*runlengths[i] for i in range(len(runlengths))])/np.sum(runlengths)
 
 def mutate(sequence,position):
     temp=np.array(sequence)
@@ -274,8 +231,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
         working_sequence=sequence[left_bound:right_bound]
         
         contact_count,contacts_all,zipped,_=HPzip(working_sequence,nucleation_contact-left_bound,len(sequence),left_bound)
-        contact_count_global=contact_count_global+contact_count
-      
+              
         for _ in zipped:
             zipped_global.add(_+left_bound)
         
@@ -289,10 +245,11 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
         for _,residue in enumerate(working_sequence):
             if residue==1:
                 H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
+        
+        #Don't count "crumples" as folds
+        if max_zipped-min_zipped>9:        
+            contact_count_global=contact_count_global+contact_count
                 
-        #H_exposure_global[min_zipped+left_bound]=H_exposure_global[min_zipped+left_bound]+1
-        #H_exposure_global[max_zipped+left_bound]=H_exposure_global[max_zipped+left_bound]+1
-          
         num_nucleations=len(unzipped_nucleation_positions)
         
         if num_nucleations==0:
@@ -325,22 +282,4 @@ def F(sequence,alpha,sample_size):
     exposure_counts=-alpha*exposure_counts
     return np.array([np.mean(contact_counts),np.mean(exposure_counts),-len(sequence)*(1-np.mean(percent_ordered))])
 
-def plot_folded_structure(sequence):
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
-    for _ in range(len(possible_nucleations)):
-        nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
-        a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
-        fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
-        plt.figure()
-        plt.axes().set_aspect('equal')
-        plt.plot(fold_graph[:,0],fold_graph[:,1],'k')
-        col_map={0:'w',1:'k'}
-        plt.plot([len(sequence)],[len(sequence)],'r',markersize=10,markeredgecolor='r')
-        for _ in locations:
-            plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
-            plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=10,markeredgecolor='k')
-            plt.axis('off')
 
-    plt.show()
-    
-    return
