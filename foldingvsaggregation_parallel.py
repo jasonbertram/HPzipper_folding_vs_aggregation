@@ -1,5 +1,5 @@
 import time
-from function_definitions import *
+from zip_functions import *
 from dask import compute,delayed
 import dask.multiprocessing
 import cPickle
@@ -13,10 +13,10 @@ import sys
 
 L=int(sys.argv[1])-1
 #L=64-1
-H=0.7
+#H=0.9
 sample_size=1000
-num_sequences=10
-alpha=0.3
+num_sequences=1
+alpha=1.
 print "alpha=",alpha
 print "L=",L
 
@@ -27,10 +27,10 @@ evolved_sequences=[]
 evolved_structures=[]
 
 for j in range(num_sequences):
-    sequence_history=[generate_initial_sequence(L,H)]
+    sequence_history=[generate_initial_sequence_connected(L)]
     #possible_mutation_history=[]
     structure_history=[]
-    for i in range(100):
+    for i in range(200):
             print "Mutation number: ", i
             values=[delayed(F,pure=True,traverse=False)(x,alpha,sample_size) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
             Fvalues=np.array(compute(*values, scheduler='processes'))
@@ -73,7 +73,7 @@ for j in range(num_sequences):
                 #Get better estimate of current fitness
                 #===========================
                 
-                values=[delayed(F,pure=True,traverse=False)(sequence_history[-1],alpha,sample_size) for _ in range(L+1)]
+                values=[delayed(F,pure=True,traverse=False)(sequence_history[-1],alpha,sample_size) for _ in range(L/10)]
                 Fcurrentvalues=np.array(compute(*values, scheduler='processes'))
                 current_fitnesses=np.sum(Fcurrentvalues[:,:-1],1)
                 original_fitness=np.mean(current_fitnesses)
@@ -92,7 +92,7 @@ for j in range(num_sequences):
 
 print (time.time()-start)/60
 
-with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_'+str(int(time.time()))[-4:],'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_'+str(int(time.time()))[-6:],'w') as fout:
 #    cPickle.dump(alpha,fout)
 #    cPickle.dump(sequence_history,fout)
 #    cPickle.dump(possible_mutation_history,fout)

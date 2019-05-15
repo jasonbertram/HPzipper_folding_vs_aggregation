@@ -26,6 +26,17 @@ def generate_initial_sequence(L,H):
     temp[np.random.choice(L,size=int(H*L),replace=False)]=1
     return temp
 
+def generate_initial_sequence_connected(L):
+    temp=np.array([1]+(L-2)*[0]+[1])
+    temp[1]=np.random.randint(2)
+    for _ in range(2,L-1):
+        if not any(temp[_-2:_]):
+            temp[_]=1
+        else:
+            temp[_]=np.random.randint(2)
+
+    return temp
+
 def neighbors(location):
     return location+np.array([[0,1],[0,-1],[-1,0],[1,0]])
 
@@ -246,8 +257,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
             if residue==1:
                 H_exposure_global[_+left_bound]=H_exposure_global[_+left_bound]-contacts_all[_]
         
-        #Don't count "crumples" as folds
-        if max_zipped-min_zipped>9:        
+        if len(zipped_global)==len(sequence):
             contact_count_global=contact_count_global+contact_count
                 
         num_nucleations=len(unzipped_nucleation_positions)
@@ -260,26 +270,26 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
     return contact_count_global, np.sum(H_exposure_global.values()),len(zipped_global)/float(len(sequence))
             
 def F(sequence,alpha,sample_size):
-    contact_counts=np.zeros(sample_size)
-    exposure_counts=np.zeros(sample_size)
-    percent_ordered=np.zeros(sample_size)
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
-    #cycle through initating nucleation contacts to reduce sample variance
-    count=0
-    for _ in itertools.cycle(range(len(possible_nucleations))):
-        if count==sample_size:
-            break
-        contact_counts[count],exposure_counts[count],percent_ordered[count]=zipped_structure(sequence,possible_nucleations,_)
-        count=count+1
+    triplet_totals=[np.sum(sequence[position:position+3]) for position in range(len(sequence)-3)]
+    if min(triplet_totals)==0:
+        return np.array([-len(sequence),-len(sequence),-len(sequence)])
+    else:
+        contact_counts=np.zeros(sample_size)
+        exposure_counts=np.zeros(sample_size)
+        percent_ordered=np.zeros(sample_size)
+        possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
+        #cycle through initating nucleation contacts to reduce sample variance
+        count=0
+        for _ in itertools.cycle(range(len(possible_nucleations))):
+            if count==sample_size:
+                break
+            contact_counts[count],exposure_counts[count],percent_ordered[count]=zipped_structure(sequence,possible_nucleations,_)
+            count=count+1
         
-    if len(possible_nucleations)==0:
-        exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
+        if len(possible_nucleations)==0:
+            exposure_counts=exposure_counts+sum([2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1])
     
-#    plt.hist(contact_counts)
-#    plt.figure()
-#    plt.hist(exposure_counts)
-    
-    exposure_counts=-alpha*exposure_counts
-    return np.array([np.mean(contact_counts),np.mean(exposure_counts),-len(sequence)*(1-np.mean(percent_ordered))])
+        exposure_counts=-alpha*exposure_counts
+        return np.array([np.mean(contact_counts),np.mean(exposure_counts),-len(sequence)*(1-np.mean(percent_ordered))])
 
 
