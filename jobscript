@@ -1,0 +1,9 @@
+#!/bin/bash 
+#PBS -k o 
+#PBS -l nodes=1:ppn=16,walltime=12:00:00,vmem=20GB
+#PBS -M jxb@iu.edu
+#PBS -N HPzipper 
+#PBS -j oe
+cd /N/dc2/scratch/jxb/HPzipper
+python foldingvsaggregation_parallel.py $1 
+#mpirun -np 32 python foldingvsaggregation_parallel.py $1

@@ -6,7 +6,7 @@ Created on Tue Apr 30 11:46:21 2019
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import zip_functions
+from zip_functions import *
 
 def initial_fold(sequence):
     return np.concatenate([sequence[:1],[sequence[position] for position in xrange(1,len(sequence)-2) if any(sequence[position-1:position+2]-np.array([1,0,1]))],sequence[-1:]])
@@ -65,10 +65,11 @@ def mean_runlength_normalized(sequence):
     return meanRL/norm
 
 def plot_folded_structure(sequence):
-    possible_nucleations=[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])]
+    possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
     for _ in range(len(possible_nucleations)):
         nucleation_contact=np.array([possible_nucleations[_],possible_nucleations[_]+3])
         a,b,c,locations=HPzip(sequence,nucleation_contact,len(sequence),0)
+        print len(c)
         fold_graph=np.array([locations[_] for _ in range(len(sequence)) if _ in locations])
         plt.figure()
         plt.axes().set_aspect('equal')
@@ -76,10 +77,46 @@ def plot_folded_structure(sequence):
         col_map={0:'w',1:'k'}
         plt.plot([len(sequence)],[len(sequence)],'r',markersize=10,markeredgecolor='r')
         for _ in locations:
-            plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
-            plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=10,markeredgecolor='k')
+            #plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
+            plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=8,markeredgecolor='k')
             plt.axis('off')
 
     plt.show()
     
     return
+
+def num_folds(sequence,sample_size):
+    structure_summaries=set()
+    possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
+    #cycle through initating nucleation contacts to reduce sample variance
+    count=0
+    for _ in itertools.cycle(range(len(possible_nucleations))):
+        if count==sample_size:
+            break
+        contact_counts,exposure_counts,percent_ordered=zipped_structure(sequence,possible_nucleations,_)
+        structure_summaries.add((contact_counts,exposure_counts,percent_ordered))
+        count=count+1
+    
+    #print structure_summaries
+    if all([_[2]<1. for _ in structure_summaries]):
+        return 0
+    else:
+        return len(structure_summaries)
+    
+def chance_complete(sequence,sample_size):
+    possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
+    #cycle through initating nucleation contacts to reduce sample variance
+    count=0
+    num_complete=0
+    for _ in itertools.cycle(range(len(possible_nucleations))):
+        if count==sample_size:
+            break
+        contact_counts,exposure_counts,percent_ordered=zipped_structure(sequence,possible_nucleations,_)
+        
+        if percent_ordered==1.:
+            num_complete=num_complete+1
+            
+        count=count+1
+        
+    return num_complete/float(sample_size)
+

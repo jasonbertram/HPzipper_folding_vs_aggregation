@@ -29,10 +29,10 @@ evolved_structures=[]
 for j in range(num_sequences):
     sequence_history=[generate_initial_sequence_connected(L)]
     #possible_mutation_history=[]
-    structure_history=[]
+    structure_history=[F(sequence_history[-1],alpha,sample_size)]
     for i in range(200):
             print "Mutation number: ", i
-            values=[delayed(F,pure=True,traverse=False)(x,alpha,sample_size) for x in [mutate(sequence_history[-1],_) for _ in range(L)]+[sequence_history[-1]]]
+            values=[delayed(F,pure=True,traverse=False)(x,alpha,sample_size) for x in [mutate(sequence_history[-1],_) for _ in range(1,L-1)]+[sequence_history[-1]]]
             Fvalues=np.array(compute(*values, scheduler='processes'))
             original_fitness=np.sum(Fvalues[-1,:-1])
             mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
@@ -79,26 +79,25 @@ for j in range(num_sequences):
                 original_fitness=np.mean(current_fitnesses)
                 mutation_effects=(mutant_fitnesses-original_fitness)
                 
-                if np.max(mutation_effects)<0:
-                    break               
-        
+                if np.max(mutation_effects)<=0:
+                    break              
+ 
             mutation_position=np.argmax(mutation_effects)
             print 'Mutation effect: ', mutation_effects[mutation_position]
             structure_history.append(Fvalues[mutation_position])
-            sequence_history.append(mutate(sequence_history[-1],mutation_position))
+            sequence_history.append(mutate(sequence_history[-1],mutation_position+1))
 
-    evolved_sequences.append(sequence_history[-1])
-    evolved_structures.append(structure_history[-1])
+    #evolved_sequences.append(sequence_history[-1])
+    #evolved_structures.append(structure_history[-1])
 
 print (time.time()-start)/60
 
 with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_'+str(int(time.time()))[-6:],'w') as fout:
-#    cPickle.dump(alpha,fout)
-#    cPickle.dump(sequence_history,fout)
-#    cPickle.dump(possible_mutation_history,fout)
-#    cPickle.dump(structure_history,fout)
     cPickle.dump(L,fout)
-    cPickle.dump(evolved_sequences,fout)
-    cPickle.dump(evolved_structures,fout)
+    cPickle.dump(sequence_history,fout)
+#    cPickle.dump(possible_mutation_history,fout)
+    cPickle.dump(structure_history,fout)
+#    cPickle.dump(evolved_sequences,fout)
+#    cPickle.dump(evolved_structures,fout)
 
 

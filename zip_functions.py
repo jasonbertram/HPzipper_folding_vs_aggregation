@@ -33,7 +33,7 @@ def generate_initial_sequence_connected(L):
         if not any(temp[_-2:_]):
             temp[_]=1
         else:
-            temp[_]=np.random.randint(2)
+            temp[_]=np.min([np.random.randint(2),1])
 
     return temp
 
