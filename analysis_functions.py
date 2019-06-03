@@ -61,7 +61,10 @@ def mean_runlength_normalized(sequence):
         return 0.
     counts=run_lengths_phobic(sequence)
     meanRL=total_hydro/sum(counts)
-    norm=1/(1-hp)
+    if hp==1:
+        norm=len(sequence)
+    else:
+        norm=1/(1-hp)
     return meanRL/norm
 
 def plot_folded_structure(sequence):
