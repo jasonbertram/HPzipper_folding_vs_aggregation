@@ -192,15 +192,15 @@ ax4.set_ylabel(r'$\Delta$ Mean run length',fontsize=12)
 plt.tight_layout()
 
 
-#===========================================================
-#Chance to be proteinlike
-#===========================================================
-
-bins=np.arange(0.6,1.9,0.1)
-pl_counts=np.histogram(-initial_structures[protein_like_pos,1]/L,)[0].astype(float)
-total_counts=np.histogram(-initial_structures[:,1]/L,bins=np.arange(0.6,1.9,0.1))[0].astype(float)
-
-plt.plot(pl_counts/total_counts)
+##===========================================================
+##Chance to be proteinlike
+##===========================================================
+#
+#bins=np.arange(0.6,1.9,0.1)
+#pl_counts=np.histogram(-initial_structures[protein_like_pos,1]/L,)[0].astype(float)
+#total_counts=np.histogram(-initial_structures[:,1]/L,bins=np.arange(0.6,1.9,0.1))[0].astype(float)
+#
+#plt.plot(pl_counts/total_counts)
 
 
 
@@ -221,23 +221,59 @@ ax1.set_xlabel(r'Number of substitutions$/L$',fontsize=12)
 ax1.set_ylabel('Hamming distance$/L$',fontsize=12)
 
 
-fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
+#fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
+#
+#maziness=np.array(map(lambda x: len(x)-1,structure_all[protein_like_pos]))/np.sum((initial_sequences - final_sequences)**2,1)[protein_like_pos].astype(float)
+##maziness_pl=scale_points(-initial_structures[protein_like_pos,1]/L,maziness)
+#maziness_pl=scale_points(map(hydrophobicity,initial_sequences[protein_like_pos]),maziness)
+#ax1.scatter(maziness_pl[:,0],maziness_pl[:,1],s=2*maziness_pl[:,2],zorder=0)
+#
+#ax1.set_xlabel(r'Initial Aggregation Potential / $L$',fontsize=12)
+#ax1.set_ylabel(r'Maziness',fontsize=12)
 
-maziness=np.array(map(lambda x: len(x)-1,structure_all[protein_like_pos]))/np.sum((initial_sequences - final_sequences)**2,1)[protein_like_pos].astype(float)
-#maziness_pl=scale_points(-initial_structures[protein_like_pos,1]/L,maziness)
-maziness_pl=scale_points(map(hydrophobicity,initial_sequences[protein_like_pos]),maziness)
-ax1.scatter(maziness_pl[:,0],maziness_pl[:,1],s=2*maziness_pl[:,2],zorder=0)
 
-ax1.set_xlabel(r'Initial Aggregation Potential / $L$',fontsize=12)
-ax1.set_ylabel(r'Maziness',fontsize=12)
+#===========================================================
+#Backtracking
+#===========================================================
 
+long_path_pos=[_ for pos,_ in enumerate(protein_like_pos) if len(sequence_all[_])>50]
+#chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos])
 
-long_path_pos=[_ for pos,_ in enumerate(protein_like_pos) if maziness[pos]>1.6]
+pos=long_path_pos[0]
 
-for _ in long_path_pos:
-    plt.figure()
-    plt.plot(np.array(structure_all[_])[:,:-1])
+structure_data=np.array(structure_all[pos])[:,:-1]
+structure_data[:,1]=-structure_data[:,1]
 
+fig1, (ax1,ax2,ax3,ax4,ax5) = plt.subplots(nrows=5,ncols=1,figsize=[3.5,7.5])
+
+ax1.plot(structure_data)
+ax1.set_ylabel(r'$A$, $S$')
+ax1.set_xticklabels([])
+
+ax2.plot(chance_complete_example)
+ax2.set_ylabel('Chance complete')
+ax2.set_xticklabels([])
+
+ax3.plot(map(hydrophobicity,sequence_all[pos]))
+ax3.set_ylabel('Hydrophobicity')
+ax3.set_xticklabels([])
+
+ax4.plot(map(lambda x: dispersion_all_phases(x,3),sequence_all[pos]))
+ax4.set_ylabel('Clustering')
+ax4.set_xticklabels([])
+
+ax5.plot(map(mean_runlength_normalized,sequence_all[pos]))
+ax5.set_ylabel('Mean run length')
+ax5.set_xlabel('Substitution number')
+
+fig1.set_tight_layout()
+
+#ax2.imshow(sequence_all[long_path_pos[0]])
+
+fig1, ax1 = plt.subplots(nrows=1,ncols=1,figsize=[3.5,3.5])
+ax1.imshow(sequence_all[long_path_pos[0]])
+ax1.set_xlabel('Sequence position')
+ax1.set_ylabel('Substitution number')
 
 #===================================================================
 
@@ -245,6 +281,18 @@ fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
 
 data=scale_points(map(hydrophobicity,initial_sequences),map(lambda x: dispersion_all_phases(x,3),initial_sequences))
 ax1.scatter(data[:,0],data[:,1],s=2*data[:,2],zorder=0)
+
+
+fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
+
+data=scale_points(map(hydrophobicity,initial_sequences),chance_complete_initial)
+ax1.scatter(data[:,0],data[:,1],s=0.5*data[:,2],zorder=0)
+
+fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
+
+data=scale_points(map(hydrophobicity,final_sequences),chance_complete_final)
+ax1.scatter(data[:,0],data[:,1],s=0.5*data[:,2],zorder=0)
+
 
 fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
 
@@ -257,7 +305,7 @@ ax1.scatter(data[:,0],data[:,1],s=2*data[:,2],zorder=0)
 
 fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
 
-data=scale_points(map(hydrophobicity,initial_sequences),map(mean_runlength_normalized,initial_sequences))
+data=scale_points(map(lambda x: dispersion_all_phases(x,3),initial_sequences),map(mean_runlength_normalized,initial_sequences))
 ax1.scatter(data[:,0],data[:,1],s=2*data[:,2],zorder=0)
 
 
@@ -275,6 +323,11 @@ fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
 data=scale_points(map(hydrophobicity,final_sequences),-initial_structures[protein_like_pos,1])
 ax1.scatter(data[:,0],data[:,1],s=2*data[:,2],c='r',zorder=0)
 
+
+fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
+
+data=scale_points(map(hydrophobicity,initial_sequences),map(mean_runlength_normalized,initial_sequences))
+ax1.scatter(data[:,0],data[:,1],s=2*data[:,2],zorder=0)
 
 
 fig1, ax1 = plt.subplots(figsize=[3.5,3.5])
