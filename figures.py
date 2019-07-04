@@ -48,7 +48,7 @@ incomplete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==0.]
 not_incomplete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _>0.]
 not_complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _<1.]
 complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
-protein_like_pos=[_ for pos,_ in enumerate(complete_pos) if fold_degen_final[pos]==1]
+#protein_like_pos=[_ for pos,_ in enumerate(complete_pos) if fold_degen_final[pos]==1]
 
 
 def scale_points(x,y):
