@@ -81,8 +81,10 @@ for j in range(num_sequences):
                 
                 if np.max(mutation_effects)<=0:
                     break              
- 
-            mutation_position=np.argmax(mutation_effects)
+
+            beneficials=[pos for pos,_ in enumerate(mutation_effects) if _>=0]
+            mutation_position=np.random.choice(beneficials)
+            #mutation_position=np.argmax(mutation_effects)
             print 'Mutation effect: ', mutation_effects[mutation_position]
             structure_history.append(Fvalues[mutation_position])
             sequence_history.append(mutate(sequence_history[-1],mutation_position+1))
@@ -92,7 +94,7 @@ for j in range(num_sequences):
 
 print (time.time()-start)/60
 
-with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_'+str(int(time.time()))[-6:],'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_4_'+str(int(time.time()))[-6:],'w') as fout:
     cPickle.dump(L,fout)
     cPickle.dump(sequence_history,fout)
 #    cPickle.dump(possible_mutation_history,fout)
