@@ -18,26 +18,26 @@ for filename in os.listdir('.'):
             structure_all.append(cPickle.load(fin))
             mutations.append(cPickle.load(fin))
 
-L_all=np.array(L_all)
+
+with open ('fold_degeneracy_properties_fixed','r') as fin:
+    sequence_all=cPickle.load(fin)
+    structure_all=cPickle.load(fin)
+    chance_complete_initial=cPickle.load(fin)
+    chance_complete_final=cPickle.load(fin)
+    mutations=cPickle.load(fin)
+#    fold_degen_final=cPickle.load(fin)
+
 structure_all=np.array(structure_all)
 sequence_all=np.array(sequence_all)
-
 mutations=map(np.array,mutations)
-
-#with open ('fold_degeneracy_properties','r') as fin:
-#    sequence_all=cPickle.load(fin)
-#    structure_all=cPickle.load(fin)
-#    chance_complete_initial=cPickle.load(fin)
-#    chance_complete_final=cPickle.load(fin)
-#    fold_degen_final=cPickle.load(fin)
 
 initial_sequences=np.array([_[0] for _ in sequence_all])
 initial_structures=np.array([_[0] for _ in structure_all])
 final_sequences=np.array([_[-1] for _ in sequence_all])
 final_structures=np.array([_[-1] for _ in structure_all])
 
-chance_complete_initial=np.array(map(lambda x: chance_complete(x,1000),initial_sequences))
-chance_complete_final=np.array(map(lambda x: chance_complete(x,1000),final_sequences))
+#chance_complete_initial=np.array(map(lambda x: chance_complete(x,1000),initial_sequences))
+#chance_complete_final=np.array(map(lambda x: chance_complete(x,1000),final_sequences))
 #fold_degen_final=np.array(map(lambda x: num_folds(x,100),final_sequences[complete_pos]))
 
 #with open ('fold_degeneracy_properties_fixed','w') as fout:
@@ -45,6 +45,7 @@ chance_complete_final=np.array(map(lambda x: chance_complete(x,1000),final_seque
 #    cPickle.dump(structure_all,fout)
 #    cPickle.dump(chance_complete_initial,fout)
 #    cPickle.dump(chance_complete_final,fout)
+#    cPickle.dump(mutations,fout)
 ##    cPickle.dump(fold_degen_final,fout)
 
 incomplete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==0.]
@@ -73,7 +74,14 @@ ref_ind=complete_pos[0]
 for i in complete_pos:
     plt.plot([np.sum((sequence_all[ref_ind][min([j,len(sequence_all[ref_ind])-1])]-sequence_all[i][min([j,len(sequence_all[i])-1])])**2) for j in range(max([len(sequence_all[ref_ind]),len(sequence_all[i])]))])
     
-plt.xlim([0,20])
+plt.xlim([0,30])
+
+
+plt.matshow([[np.sum((final_sequences[i]-final_sequences[j])**2) for i in complete_pos] for j in complete_pos])
+plt.colorbar()
+
+plt.matshow([[np.sum((final_sequences[i]-final_sequences[j])**2) for i in range(len(sequence_all))] for j in range(len(sequence_all))])
+plt.colorbar()
 
 
 for _ in np.array(mutations)[complete_pos]:
@@ -81,18 +89,71 @@ for _ in np.array(mutations)[complete_pos]:
     
 plt.xlim([0,100])
 
-plt.matshow([(_[1]-_[0])**2 for _ in sequence_all])
+plt.hist(np.argmax([(_[1]-_[0])**2 for _ in sequence_all],1),bins=range(0,59))
+plt.hist(np.argmax([(_[1]-_[0])**2 for _ in sequence_all[complete_pos]],1),bins=range(0,59))
 
-plt.matshow([(_[1]-_[0])**2 for _ in sequence_all[complete_pos]])
+plt.plot(range(1,59),np.mean([_[0] for _ in mutations],0))
 
+plt.plot(np.argmax([(_[1]-_[0])**2 for _ in sequence_all],1),np.sum(final_structures[:,:2],1),'.')
+plt.ylim([-5,40])
 
 def mutation_positions(sequence_history):
-    return np.array([np.argmax((sequence_history[i]-sequence_history[i-1])**2) for i in range(1,len(sequence_history))])
+    return np.array([np.argmax((sequence_history[i]-sequence_history[i-1])**2)-1 for i in range(1,len(sequence_history))])
+
+def fitness_effects(index):
+    positions=mutation_positions(sequence_all[index])
+    return np.array([mutations[index][_][positions[_]] for _ in range(len(positions))])
 
 def mutation_percentile(index):
     positions=mutation_positions(sequence_all[index])
-    beneficials=[[_ for _ in spectrum if _>=0] for spectrum in mutations[index]]
-    sorted_beneficials=np.argsort(beneficials,1)
+    sorted_mutations=map(np.argsort,mutations[index])
+    num_beneficials=np.array([float(len([_ for _ in spectrum if _>=0])) for spectrum in mutations[index]])
+    
+    return [(np.argwhere(sorted_mutations[_]==positions[_])[0][0]-len(sorted_mutations[_])+num_beneficials[_]+1)/num_beneficials[_] for _ in range(len(positions))]
+    
+for _ in not_complete_pos:
+    plt.plot(fitness_effects(_),c='C0')
+    
+for _ in complete_pos:
+    plt.plot(fitness_effects(_),c='C1')
+
+plt.xlim([0,10])
+
+
+for _ in not_complete_pos:
+    plt.plot(np.sum(np.array(structure_all[_])[:,:2],1),c='C0',linewidth=0.5)
+
+for _ in complete_pos:
+    plt.plot(np.sum(np.array(structure_all[_])[:,:2],1),c='C1',linewidth=0.5)
+
+plt.xlim([0,100])
+
+
+for _ in not_complete_pos:
+    plt.plot([np.sum((sequence_all[0][0]-sequence_all[_][j])**2) for j in range(len(sequence_all[_]))],np.sum(np.array(structure_all[_])[:,:2],1),c='C0',linewidth=0.5)
+
+for _ in complete_pos:
+    plt.plot([np.sum((sequence_all[0][0]-sequence_all[_][j])**2) for j in range(len(sequence_all[_]))],np.sum(np.array(structure_all[_])[:,:2],1),c='C1',linewidth=0.5)
+
+#plt.xlim([0,60])
+
+
+
+for _ in not_complete_pos:
+    plt.plot([np.sum((sequence_all[0][0]-sequence_all[_][j])**2) for j in range(len(sequence_all[_]))],c='C0')
+    
+
+for _ in complete_pos:
+    plt.plot([np.sum((sequence_all[0][0]-sequence_all[_][j])**2) for j in range(len(sequence_all[_]))],c='C1')
+
+plt.xlim([0,100])
+    
+
+
+start=10
+window=1
+#plt.boxplot([np.mean(np.array([fitness_effects(_)[:window] for _ in not_complete_pos]),1),np.mean(np.array([fitness_effects(_)[:window] for _ in complete_pos]),1)])
+plt.boxplot([np.array([fitness_effects(_)[start:start+window] for _ in not_complete_pos]).flatten(),np.array([fitness_effects(_)[start:start+window] for _ in complete_pos]).flatten()])
 
 #===============================================
 #Initial vs final
