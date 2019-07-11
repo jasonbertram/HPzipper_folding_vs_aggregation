@@ -5,21 +5,21 @@ from analysis_functions import *
 import cPickle
 import os
 
-L_all=[]
-sequence_all=[]
-structure_all=[]
-mutations=[]
+#L_all=[]
+#sequence_all=[]
+#structure_all=[]
+#mutations=[]
+#
+#for filename in os.listdir('.'):
+#    if filename[:18]=='output1.0_1000_60_':
+#        with open(filename,'r') as fin:
+#            L_all.append(cPickle.load(fin))
+#            sequence_all.append(cPickle.load(fin))
+#            structure_all.append(cPickle.load(fin))
+#            mutations.append(cPickle.load(fin))
 
-for filename in os.listdir('.'):
-    if filename[:18]=='output1.0_1000_60_':
-        with open(filename,'r') as fin:
-            L_all.append(cPickle.load(fin))
-            sequence_all.append(cPickle.load(fin))
-            structure_all.append(cPickle.load(fin))
-            mutations.append(cPickle.load(fin))
 
-
-with open ('fold_degeneracy_properties_fixed','r') as fin:
+with open ('fold_degeneracy_properties','r') as fin:
     sequence_all=cPickle.load(fin)
     structure_all=cPickle.load(fin)
     chance_complete_initial=cPickle.load(fin)
@@ -126,7 +126,7 @@ for _ in not_complete_pos:
 for _ in complete_pos:
     plt.plot(np.sum(np.array(structure_all[_])[:,:2],1),c='C1',linewidth=0.5)
 
-plt.xlim([0,100])
+plt.xlim([0,40])
 
 
 for _ in not_complete_pos:
@@ -159,7 +159,7 @@ plt.boxplot([np.array([fitness_effects(_)[start:start+window] for _ in not_compl
 #Initial vs final
 #===============================================
 
-fig1, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,figsize=[7.5,7.5])
+fig1, ((ax2,ax3),(ax4,ax1)) = plt.subplots(nrows=2,ncols=2,figsize=[7.5,7.5])
 
 #===============================================
 #Hydrophobicity
@@ -181,7 +181,7 @@ ax1.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax1.set_ylabel(r'Final Hydrophobicity', fontsize=12)
 
 #===============================================
-#Stability
+#Fitness
 
 A_all=scale_points(np.sum(initial_structures[incomplete_pos,:2],1),np.sum(final_structures[incomplete_pos,:2],1))
 
@@ -202,40 +202,84 @@ ax2.set_ylabel(r'Final $\overline{F}$ / $L$',fontsize=12)
 
 
 #===============================================
-#Aggregation
+#Fitness vs hydro initial
 
-A_all=scale_points(-initial_structures[incomplete_pos,1],-final_structures[incomplete_pos,1])
+hydro_all=scale_points(map(hydrophobicity,initial_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
 
-ax3.plot([0,2.],[0,2.],'k',zorder=-1)
-ax3.scatter(A_all[:,0]/L,A_all[:,1]/L,s=2*A_all[:,2],zorder=0)
+#ax4.plot([0,1],[0,1],'k',zorder=-2)
+ax3.scatter(hydro_all[:,0],hydro_all[:,1]/L,s=2*hydro_all[:,2],zorder=0)
 
-A_pl=scale_points(-initial_structures[complete_pos,1],-final_structures[complete_pos,1])
-ax3.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=3,c='C3')
+hydro_pl=scale_points(map(hydrophobicity,initial_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
+ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3,c='C3')
 
-A_pl=scale_points(-initial_structures[not_incomplete_pos,1],-final_structures[not_incomplete_pos,1])
-ax3.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=1)
+hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_pos]),np.sum(final_structures[not_incomplete_pos,:2],1))
+ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
+
+ax3.set_xlabel(r'Final Hydrophobicity',fontsize=12)
+ax3.set_ylabel(r'Final $\overline{F}$ / $L$',fontsize=12)
 
 
-ax3.set_xlim([0.4,1.8])
-ax3.set_ylim([0,1.4])
-ax3.set_xlabel(r'Initial Aggregation Potential / $L$',fontsize=12)
-ax3.set_ylabel(r'Final Aggregation Potential / $L$',fontsize=12)
+#ax3.set_xlim([0.4,1.8])
+#ax3.set_ylim([0,1.4])
+ax3.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
+ax3.set_ylabel(r'Final $\overline{F}$ / $L$',fontsize=12)
+
+#===============================================
+#Fitness vs hydro final
+
+hydro_all=scale_points(map(hydrophobicity,final_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
+
+#ax4.plot([0,1],[0,1],'k',zorder=-2)
+ax4.scatter(hydro_all[:,0],hydro_all[:,1]/L,s=2*hydro_all[:,2],zorder=0)
+
+hydro_pl=scale_points(map(hydrophobicity,final_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
+ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3,c='C3')
+
+hydro_pl=scale_points(map(hydrophobicity,final_sequences[not_incomplete_pos]),np.sum(final_structures[not_incomplete_pos,:2],1))
+ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
+
+ax4.set_xlabel(r'Final Hydrophobicity',fontsize=12)
+ax4.set_ylabel(r'Final $\overline{F}$ / $L$',fontsize=12)
+
+plt.tight_layout()
+
 
 #===============================================
 #Clustering
-
-ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),s=2)
-ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_pos]),s=2)
-ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2)
-ax4.plot([0,1.6],[0,1.6],'k')
-ax4.set_xlabel('Initial Clustering',fontsize=12)
-ax4.set_ylabel('Final Clustering',fontsize=12)
-
-plt.tight_layout()
+#
+#ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),s=2)
+#ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_pos]),s=2)
+#ax4.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2)
+#ax4.plot([0,1.6],[0,1.6],'k')
+#ax4.set_xlabel('Initial Clustering',fontsize=12)
+#ax4.set_ylabel('Final Clustering',fontsize=12)
+#
+##===============================================
+##Aggregation
+#
+#A_all=scale_points(-initial_structures[incomplete_pos,1],-final_structures[incomplete_pos,1])
+#
+#ax3.plot([0,2.],[0,2.],'k',zorder=-1)
+#ax3.scatter(A_all[:,0]/L,A_all[:,1]/L,s=2*A_all[:,2],zorder=0)
+#
+#A_pl=scale_points(-initial_structures[complete_pos,1],-final_structures[complete_pos,1])
+#ax3.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=3,c='C3')
+#
+#A_pl=scale_points(-initial_structures[not_incomplete_pos,1],-final_structures[not_incomplete_pos,1])
+#ax3.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=1)
+#
+#
+#ax3.set_xlim([0.4,1.8])
+#ax3.set_ylim([0,1.4])
+#ax3.set_xlabel(r'Initial Aggregation Potential / $L$',fontsize=12)
+#ax3.set_ylabel(r'Final Aggregation Potential / $L$',fontsize=12)
 
 #===========================================================
 #Change vs initial A
 #===========================================================
+
+
+
 
 fig2, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,figsize=[7.5,7.5])
 
