@@ -243,9 +243,9 @@ complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
 
 L=float(len(sequence_all[0][0]))
 
-fig2, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=[3.5,6.])
+fig2, (ax1,ax2,ax3) = plt.subplots(nrows=3,ncols=1,figsize=[3.5,6.],dpi=500)
 #===========================================================
-#Hamming plot
+#Delt F vs Hamming
 
 delta=np.sum(final_structures[incomplete_pos,:2],1)-np.sum(initial_structures[incomplete_pos,:2],1)
 #A_all=scale_points(np.array(map(path_length,structure_all[incomplete_pos]))/L,delta/L)
@@ -280,6 +280,20 @@ ax2.set_ylabel(r'Path Length / $L$',fontsize=12)
 ax2.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
+#===========================================================
+#Hydrophobocity vs time
+
+data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
+points=scale_points(data[:,0],data[:,1])
+ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0',marker='o')
+
+data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
+points=scale_points(data[:,0],data[:,1])
+ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C3',marker='o')
+
+ax3.set_xlabel(r'Substitution number',fontsize=12)
+ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
+
 fig2.tight_layout()
 
 #===========================================================
@@ -296,12 +310,12 @@ structure_data[:,1]=-structure_data[:,1]
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-fig3 = plt.figure(figsize=[6,4],constrained_layout=True)
+fig3 = plt.figure(figsize=[6,4],constrained_layout=True,dpi=300)
 gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
 
 ax1=fig3.add_subplot(gs[0,0])
 ax1.plot(structure_data/L)
-ax1.set_ylabel(r'$A/L$, $S/L$',fontsize=12)
+ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
 ax1.set_xticklabels([])
 
 ax2=fig3.add_subplot(gs[1,0])
@@ -346,7 +360,6 @@ plt.tight_layout()
 #ax5.set_xlabel('Substitution number')
 
 
-
 #===============================================
 #misc
 #===============================================
@@ -378,14 +391,55 @@ plt.plot(range(1,59),np.mean([_[0] for _ in mutations],0))
 plt.plot(np.argmax([(_[1]-_[0])**2 for _ in sequence_all],1),np.sum(final_structures[:,:2],1),'.')
 plt.ylim([-5,40])
 
-    
-for _ in not_complete_pos:
-    plt.plot(fitness_effects(_),c='C0')
-    
-for _ in complete_pos:
-    plt.plot(fitness_effects(_),c='C1')
 
-plt.xlim([0,10])
+
+    
+for _ in incomplete_pos:
+    plt.plot(fitness_effects(_)[:path_length(structure_all[_])+1],c='C0',linewidth=0.5,alpha=0.5)
+    
+for _ in not_incomplete_complete_pos:
+    plt.plot(fitness_effects(_)[:path_length(structure_all[_])+1],c='C1',linewidth=0.5,alpha=0.5)
+
+for _ in complete_pos:
+    plt.plot(fitness_effects(_)[:path_length(structure_all[_])+1],c='C3',linewidth=0.5,alpha=0.5)
+
+plt.xlim([0,100])
+
+
+plt.hist(np.concatenate([fitness_effects(_)[:path_length(structure_all[_])+1] for _ in complete_pos]),100,normed=True)
+plt.hist(np.concatenate([fitness_effects(_)[:path_length(structure_all[_])+1] for _ in incomplete_pos]),100,normed=True,alpha=0.5)
+
+
+#for _ in not_incomplete_complete_pos:
+#    plt.plot(map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C1',alpha=0.1)
+
+
+
+
+
+
+data=np.concatenate([zip(range(path_length(structure_all[_])+1),np.array(structure_all[_])[:path_length(structure_all[_])+1,1]) for _ in complete_pos])
+points=scale_points(data[:,0],data[:,1])
+
+plt.scatter(points[:,0],points[:,1],s=1*points[:,2],c='C3',zorder=1)
+
+data=np.concatenate([zip(range(path_length(structure_all[_])+1),np.array(structure_all[_])[:path_length(structure_all[_])+1,1]) for _ in incomplete_pos])
+points=scale_points(data[:,0],data[:,1])
+
+plt.scatter(points[:,0],points[:,1],s=1*points[:,2],c='C0',zorder=1)
+
+
+
+
+for _ in complete_pos:
+    plt.plot(map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',alpha=0.1,linewidth=2)
+
+for _ in incomplete_pos:
+    plt.plot(map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',alpha=0.1,linewidth=2)
+
+
+plt.xlim([0,100])
+
 
 
 for _ in incomplete_pos:
@@ -397,7 +451,7 @@ for _ in not_incomplete_complete_pos:
 for _ in complete_pos:
     plt.plot(np.sum(np.array(structure_all[_])[:path_length(structure_all[_])+1,:2],1),c='C3',linewidth=1.,alpha=0.5)
 
-plt.xlim([0,200])
+plt.xlim([0,100])
 
 
 for _ in not_complete_pos:
