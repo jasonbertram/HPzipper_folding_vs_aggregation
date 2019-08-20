@@ -283,13 +283,17 @@ ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Hydrophobocity vs time
 
-data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
-points=scale_points(data[:,0],data[:,1])
-ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0')
+fig2, (ax1,ax2,ax3) = plt.subplots(nrows=3,ncols=1,figsize=[3.,6.],dpi=300)
+
+#data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
+#points=scale_points(data[:,0],data[:,1])
+#ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0')
+for _ in incomplete_pos:
+    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0')
 
 data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
-points=scale_points(data[:,0],data[:,1])
-ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C3')
+#points=scale_points(data[:,0],data[:,1])
+ax3.plot(data[:,0],data[:,1],c='C3')
 
 ax3.set_xlabel(r'Substitution number',fontsize=12)
 ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
