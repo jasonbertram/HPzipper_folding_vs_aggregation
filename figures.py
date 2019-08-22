@@ -263,7 +263,7 @@ A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[complete_p
 ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 
 #ax2.set_xlim([0,1])
-#ax1.set_xlabel(r'Hamming distance / $L$',fontsize=12)
+ax1.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax1.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 #ax1.yaxis.set_label_coords(-0.22,0.5)
 ax1.annotate('a',[0.05,0.9],xycoords='axes fraction',fontsize=12)
@@ -283,17 +283,18 @@ ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Hydrophobocity vs time
 
-fig2, (ax1,ax2,ax3) = plt.subplots(nrows=3,ncols=1,figsize=[3.,6.],dpi=300)
+#data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
+#points=scale_points(data[:,0],data[:,1])
+#ax3.plot(data[:,0],data[:,1],c='C3')
+for _ in complete_pos:
+    ax3.plot(np.array(range(path_length(structure_all[_])+1))-1.,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=0.5)
 
 #data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
 #points=scale_points(data[:,0],data[:,1])
 #ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0')
 for _ in incomplete_pos:
-    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0')
+    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=0.5)
 
-data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
-#points=scale_points(data[:,0],data[:,1])
-ax3.plot(data[:,0],data[:,1],c='C3')
 
 ax3.set_xlabel(r'Substitution number',fontsize=12)
 ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
@@ -319,9 +320,11 @@ fig3 = plt.figure(figsize=[6,4],constrained_layout=True,dpi=300)
 gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
 
 ax1=fig3.add_subplot(gs[0,0])
-ax1.plot(structure_data/L)
+ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
+ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
 ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
 ax1.set_xticklabels([])
+ax1.legend(ncol=2,fontsize=8,loc="upper right")
 
 ax2=fig3.add_subplot(gs[1,0])
 ax2.plot(chance_complete_example)
