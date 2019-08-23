@@ -340,22 +340,24 @@ ax3.set_xlabel(r'Substitution number',fontsize=12)
 
 ax4=fig3.add_subplot((gs[:,1]))
 #ax4.plot(map(hydrophobicity,sequence_all[pos]))
-im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
+#im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
+strong_beneficials=np.array([map(lambda x: 1 if x>=1 else -1,spectrum) for spectrum in mutations[pos]])
+im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
 ax4.set_xlabel(r'Sequence position',fontsize=12)
 ax4.set_ylabel(r'Substitution number',fontsize=12)
-ax4.set_title(r'Mutation effects')
+ax4.set_title(r'Beneficial mutations')
 ax4.xaxis.set_label_coords(0.5,-0.08)
-axins = inset_axes(ax4,
-                   width="100%",  # width = 5% of parent_bbox width
-                   height="5%",  # height : 50%
-                   loc='lower center',
-                   bbox_to_anchor=(0, -0.25, 1, 1),
-                   bbox_transform=ax4.transAxes,
-                   borderpad=0,
-                   )
-fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
-ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
-ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
+#axins = inset_axes(ax4,
+#                   width="100%",  # width = 5% of parent_bbox width
+#                   height="5%",  # height : 50%
+#                   loc='lower center',
+#                   bbox_to_anchor=(0, -0.25, 1, 1),
+#                   bbox_transform=ax4.transAxes,
+#                   borderpad=0,
+#                   )
+#fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
+#ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
+#ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
 
 plt.tight_layout()
 
