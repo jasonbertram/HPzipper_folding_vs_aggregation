@@ -203,7 +203,7 @@ ax5.annotate('e',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),s=2)
 ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_pos]),s=2)
-ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2)
+#ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2)
 ax6.plot([0,1.6],[0,1.6],'k')
 ax6.set_xlabel(r'Initial Clustering',fontsize=12)
 ax6.set_ylabel(r'Final Clustering',fontsize=12)
