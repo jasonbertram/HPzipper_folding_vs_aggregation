@@ -93,7 +93,6 @@ complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
 L=float(len(sequence_all[0][0]))
 
 fig1, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(nrows=2,ncols=3,figsize=[7.5,5.0])
-
 #===============================================
 #Fitness
 
@@ -103,9 +102,9 @@ ax1.plot([-2,0.],[-2,0.],'k',zorder=-1)
 ax1.scatter(A_all[:,0]/L,A_all[:,1]/L,s=2*A_all[:,2],zorder=0)
 
 A_pl=scale_points(np.sum(initial_structures[complete_pos,:2],1),np.sum(final_structures[complete_pos,:2],1))
-ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=3,c='C3')
+ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=-1,c='C3')
 
-A_pl=scale_points(np.sum(initial_structures[not_incomplete_pos,:2],1),np.sum(final_structures[not_incomplete_pos,:2],1))
+A_pl=scale_points(np.sum(initial_structures[not_incomplete_complete_pos,:2],1),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=1)
 
 ax1.set_xlim([-2,0.])
@@ -122,9 +121,9 @@ delta=np.sum(final_structures[incomplete_pos,:2],1)-np.sum(initial_structures[in
 A_all=scale_points(np.array(map(path_length,structure_all[incomplete_pos]))/L,delta/L)
 ax2.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
 
-delta=np.sum(final_structures[not_incomplete_pos,:2],1)-np.sum(initial_structures[not_incomplete_pos,:2],1)
-A_all=scale_points(np.array(map(path_length,structure_all[not_incomplete_pos]))/L,delta/L)
-ax2.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
+delta=np.sum(final_structures[not_incomplete_complete_pos,:2],1)-np.sum(initial_structures[not_incomplete_complete_pos,:2],1)
+A_all=scale_points(np.array(map(path_length,structure_all[not_incomplete_complete_pos]))/L,delta/L)
+ax2.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=1)
 
 delta=np.sum(final_structures[complete_pos,:2],1)-np.sum(initial_structures[complete_pos,:2],1)
 A_all=scale_points(np.array(map(path_length,structure_all[complete_pos]))/L,delta/L)
@@ -139,16 +138,14 @@ ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #===============================================
 #Fitness vs hydro initial
 
-hydro_all=scale_points(map(hydrophobicity,initial_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
-
-#ax4.plot([0,1],[0,1],'k',zorder=-2)
+hydro_all=scale_points(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
 ax3.scatter(hydro_all[:,0],hydro_all[:,1]/L,s=2*hydro_all[:,2],zorder=0)
 
-hydro_pl=scale_points(map(hydrophobicity,initial_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
-ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3,c='C3')
+hydro_pl=scale_points(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
+ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1,c='C3')
 
-hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_pos]),np.sum(final_structures[not_incomplete_pos,:2],1))
-ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
+hydro_pl=scale_points(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_complete_pos]),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
+ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3)
 
 #ax3.set_xlim([0.4,1.8])
 ax3.set_ylim([-1,0.6])
@@ -160,15 +157,15 @@ ax3.annotate('c',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #===============================================
 #Fitness vs hydro final
 
-hydro_all=scale_points(map(hydrophobicity,final_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
+hydro_all=scale_points(map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),np.sum(final_structures[incomplete_pos,:2],1))
 
 #ax4.plot([0,1],[0,1],'k',zorder=-2)
 ax4.scatter(hydro_all[:,0],hydro_all[:,1]/L,s=2*hydro_all[:,2],zorder=0)
 
-hydro_pl=scale_points(map(hydrophobicity,final_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
-ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3,c='C3')
+hydro_pl=scale_points(map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),np.sum(final_structures[complete_pos,:2],1))
+ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=0,c='C3')
 
-hydro_pl=scale_points(map(hydrophobicity,final_sequences[not_incomplete_pos]),np.sum(final_structures[not_incomplete_pos,:2],1))
+hydro_pl=scale_points(map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_complete_pos]),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
 
 ax4.set_ylim([-1,0.6])
@@ -186,10 +183,10 @@ ax5.plot([0,1],[0,1],'k',zorder=-2)
 ax5.scatter(hydro_all[:,0],hydro_all[:,1],s=2*hydro_all[:,2],zorder=0)
 
 hydro_pl=scale_points(map(hydrophobicity,initial_sequences[complete_pos]),map(hydrophobicity,final_sequences[complete_pos]))
-ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=3,c='C3')
+ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=0,c='C3')
 
-hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_pos]),map(hydrophobicity,final_sequences[not_incomplete_pos]))
-ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=1)
+hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_complete_pos]),map(hydrophobicity,final_sequences[not_incomplete_complete_pos]))
+ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=1,alpha=.7)
 
 ax5.set_xlim([0.3,1.])
 ax5.set_ylim([0.3,1.])
@@ -201,9 +198,10 @@ ax5.annotate('e',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #===============================================
 #Clustering
 
-ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),s=2)
-ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_pos]),s=2)
-#ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2)
+ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]),s=2.)
+ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]),c='r',s=2.)
+ax6.scatter(map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_complete_pos]),s=2.,alpha=0.7)
+
 ax6.plot([0,1.6],[0,1.6],'k')
 ax6.set_xlabel(r'Initial Clustering',fontsize=12)
 ax6.set_ylabel(r'Final Clustering',fontsize=12)
@@ -252,9 +250,9 @@ delta=np.sum(final_structures[incomplete_pos,:2],1)-np.sum(initial_structures[in
 A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[incomplete_pos]/L,delta/L)
 ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
 
-delta=np.sum(final_structures[not_incomplete_pos,:2],1)-np.sum(initial_structures[not_incomplete_pos,:2],1)
+delta=np.sum(final_structures[not_incomplete_complete_pos,:2],1)-np.sum(initial_structures[not_incomplete_complete_pos,:2],1)
 #A_all=scale_points(np.array(map(path_length,structure_all[not_incomplete_pos]))/L,delta/L)
-A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[not_incomplete_pos]/L,delta/L)
+A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[not_incomplete_complete_pos]/L,delta/L)
 ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
 
 delta=np.sum(final_structures[complete_pos,:2],1)-np.sum(initial_structures[complete_pos,:2],1)
@@ -286,15 +284,21 @@ ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 #data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
 #points=scale_points(data[:,0],data[:,1])
 #ax3.plot(data[:,0],data[:,1],c='C3')
+#for _ in complete_pos:
+#    ax3.plot(np.array(range(path_length(structure_all[_])+1))-1.,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=0.5)
+
 for _ in complete_pos:
-    ax3.plot(np.array(range(path_length(structure_all[_])+1))-1.,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=0.5)
+    ax3.plot(np.array(range(path_length(structure_all[_])+1))-1.,map(lambda x: dispersion_all_phases(x,3),sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=0.5)
+
 
 #data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
 #points=scale_points(data[:,0],data[:,1])
 #ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0')
-for _ in incomplete_pos:
-    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=0.5)
+#for _ in incomplete_pos:
+#    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=0.5)
 
+for _ in incomplete_pos:
+    ax3.plot(range(path_length(structure_all[_])+1),map(lambda x: dispersion_all_phases(x,3),sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=0.5)
 
 ax3.set_xlabel(r'Substitution number',fontsize=12)
 ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
@@ -341,7 +345,7 @@ ax3.set_xlabel(r'Substitution number',fontsize=12)
 ax4=fig3.add_subplot((gs[:,1]))
 #ax4.plot(map(hydrophobicity,sequence_all[pos]))
 #im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
-strong_beneficials=np.array([map(lambda x: 1 if x>=1 else -1,spectrum) for spectrum in mutations[pos]])
+strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
 im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
 ax4.set_xlabel(r'Sequence position',fontsize=12)
 ax4.set_ylabel(r'Substitution number',fontsize=12)
