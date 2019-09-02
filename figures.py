@@ -333,7 +333,7 @@ fig2.tight_layout()
 long_path_pos=[_ for pos,_ in enumerate(complete_pos) if path_length(structure_all[_])>60]
 pos=long_path_pos[0]
 #chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos][:path_length(structure_all[pos])+1])
-
+position_data=mutation_positions(sequence_history[pos])
 structure_data=np.array(structure_all[pos])[:,:-1]
 structure_data[:,1]=-structure_data[:,1]
 
@@ -367,9 +367,10 @@ ax4=fig3.add_subplot((gs[:,1]))
 #im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
 strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
 #im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
-ax4.imshow(strong_beneficials)
-ax4.plot([34.5,34.5],[-0.5,66.5],c='white',linewidth=1)
-ax4.plot([35.5,35.5],[-0.5,66.5],c='white',linewidth=1)
+ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.k',markersize=2)
+im=ax4.imshow(strong_beneficials,extent=[1,59,68,1])
+ax4.plot([36.,36],[1.,68],c='white',linewidth=1)
+ax4.plot([37,37],[1.,68],c='white',linewidth=1)
 ax4.set_xlabel(r'Sequence position',fontsize=12)
 ax4.set_ylabel(r'Substitution number',fontsize=12)
 ax4.set_title(r'Beneficial mutations')
