@@ -212,29 +212,6 @@ ax6.annotate('f',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 plt.tight_layout(w_pad=-.5)
 
 
-
-data=scale_points(map(hydrophobicity,initial_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),initial_sequences[incomplete_pos]))
-plt.scatter(data[:,0],data[:,1],s=16*data[:,2],c='C0',zorder=1)
-
-data=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_complete_pos]),map(lambda x: dispersion_all_phases(x,3),initial_sequences[not_incomplete_complete_pos]))
-plt.scatter(data[:,0],data[:,1],s=16*data[:,2],c='C1',zorder=1)
-
-data=scale_points(map(hydrophobicity,initial_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),initial_sequences[complete_pos]))
-plt.scatter(data[:,0],data[:,1],s=16*data[:,2],c='C3',zorder=1)
-
-
-
-data=scale_points(map(hydrophobicity,final_sequences[incomplete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[incomplete_pos]))
-plt.scatter(data[:,0],data[:,1],s=8*data[:,2],c='C0',zorder=1)
-
-data=scale_points(map(hydrophobicity,final_sequences[not_incomplete_complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[not_incomplete_complete_pos]))
-plt.scatter(data[:,0],data[:,1],s=8*data[:,2],c='C1',zorder=1)
-
-data=scale_points(map(hydrophobicity,final_sequences[complete_pos]),map(lambda x: dispersion_all_phases(x,3),final_sequences[complete_pos]))
-plt.scatter(data[:,0],data[:,1],s=8*data[:,2],c='C3',zorder=1)
-
-
-
 #===========================================================
 #Mazes
 #===========================================================
@@ -332,37 +309,19 @@ fig2.tight_layout()
 
 long_path_pos=[_ for pos,_ in enumerate(complete_pos) if path_length(structure_all[_])>60]
 pos=long_path_pos[0]
-#chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos][:path_length(structure_all[pos])+1])
-position_data=mutation_positions(sequence_history[pos])
+chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos][:path_length(structure_all[pos])+1])
+position_data=mutation_positions(sequence_all[pos])
 structure_data=np.array(structure_all[pos])[:,:-1]
 structure_data[:,1]=-structure_data[:,1]
 
 import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.patches import Patch
 
-fig3 = plt.figure(figsize=[6,4],constrained_layout=True,dpi=300)
+fig3 = plt.figure(figsize=[6,5],constrained_layout=True,dpi=300)
 gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
 
-ax1=fig3.add_subplot(gs[0,0])
-ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
-ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
-ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
-ax1.set_xticklabels([])
-ax1.legend(ncol=2,fontsize=8,loc="upper right")
-
-ax2=fig3.add_subplot(gs[1,0])
-ax2.plot(chance_complete_example)
-ax2.set_ylabel(r'$\%$ complete',fontsize=12)
-ax2.set_xticklabels([])
-
-ax3=fig3.add_subplot(gs[2,0])
-ax3.plot(map(hydrophobicity,sequence_all[pos]))
-ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
-ax3.set_ylim([0.5,1])
-ax3.set_yticklabels(['.5','','1'])
-ax3.set_xlabel(r'Substitution number',fontsize=12)
-
-ax4=fig3.add_subplot((gs[:,1]))
+ax4=fig3.add_subplot((gs[:-1,0]))
 #ax4.plot(map(hydrophobicity,sequence_all[pos]))
 #im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
 strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
@@ -370,11 +329,11 @@ strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),s
 ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.k',markersize=2)
 im=ax4.imshow(strong_beneficials,extent=[1,59,68,1])
 ax4.plot([36.,36],[1.,68],c='white',linewidth=1)
-ax4.plot([37,37],[1.,68],c='white',linewidth=1)
+ax4.plot([37.1,37.1],[1.,68],c='white',linewidth=1)
 ax4.set_xlabel(r'Sequence position',fontsize=12)
 ax4.set_ylabel(r'Substitution number',fontsize=12)
 ax4.set_title(r'Beneficial mutations')
-ax4.xaxis.set_label_coords(0.5,-0.08)
+ax4.xaxis.set_label_coords(0.5,-0.1)
 #axins = inset_axes(ax4,
 #                   width="100%",  # width = 5% of parent_bbox width
 #                   height="5%",  # height : 50%
@@ -387,15 +346,57 @@ ax4.xaxis.set_label_coords(0.5,-0.08)
 #ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
 #ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
 
+ax4=fig3.add_subplot((gs[:-1,1]))
+im=ax4.imshow(np.array(sequence_all[pos])[1:-1],extent=[1,59,68,1],cmap='binary')
+ax4.set_xlabel(r'Sequence position',fontsize=12)
+ax4.xaxis.set_label_coords(0.5,-0.1)
+
+legend_elements = [Patch(facecolor='k', edgecolor='k',label='Hydrophobic'),
+                   Patch(facecolor='white', edgecolor='k',label='Polar')]
+
+ax4.legend(handles=legend_elements, ncol=2, loc='upper center',fontsize=10,bbox_to_anchor=(0.5, 1.1),frameon=False)
+
+ax1=fig3.add_subplot(gs[2,0])
+ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
+ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
+ax1.plot(chance_complete_example,'k',label=r'$\%$ Complete')
+ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
+ax1.set_xticklabels([])
+ax1.legend(ncol=2,fontsize=6,loc="upper center",framealpha=0.5)
+ax1.set_xlabel(r'Substitution number',fontsize=12)
+
+ax3=fig3.add_subplot(gs[2,1])
+ax3.plot(map(hydrophobicity,sequence_all[pos]))
+ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
+ax3.set_ylim([0.5,1])
+ax3.set_yticklabels(['.5','','1'])
+ax3.set_xlabel(r'Substitution number',fontsize=12)
+
+plt.tight_layout(h_pad=-1.)
 plt.tight_layout()
 
-#ax4.plot(map(lambda x: dispersion_all_phases(x,3),sequence_all[pos]))
-#ax4.set_ylabel('Clustering')
-#ax4.set_xticklabels([])
-#
-#ax5.plot(map(mean_runlength_normalized,sequence_all[pos]))
-#ax5.set_ylabel('Mean run length')
-#ax5.set_xlabel('Substitution number')
+
+#structure_initial=[F(x,1.,1000) for x in [mutate(sequence_all[pos][0],_) for _ in range(1,59)]+[sequence_all[pos][0]]]
+structure_initial=np.array(structure_initial)[:,:-1]
+structure_effects_initial=(structure_initial[:-1]-structure_initial[-1])/np.abs(structure_initial[-1])
+
+plt.scatter(structure_effects_initial[:,0],structure_effects_initial[:,1],c=sequence_all[pos][0][1:-1])
+plt.plot([0,0],[-20,20],'k')
+plt.plot([-20,20],[0,0],'k')
+plt.xlim([-2,2])
+plt.ylim([-0.2,0.2])
+
+
+#structure_40=[F(x,1.,1000) for x in [mutate(sequence_all[pos][40],_) for _ in range(1,59)]+[sequence_all[pos][40]]]
+#structure_40=np.array(structure_40)[:,:-1]
+structure_effects_40=(structure_40[:-1]-structure_40[-1])#/np.abs(structure_40[-1])
+
+plt.scatter(structure_effects_40[:,0],structure_effects_40[:,1],c=sequence_all[pos][30][1:-1])
+plt.plot([0,0],[-20,20],'k')
+plt.plot([-20,20],[0,0],'k')
+plt.xlim([-5,5])
+plt.ylim([-5,5])
+
 
 
 #===============================================
