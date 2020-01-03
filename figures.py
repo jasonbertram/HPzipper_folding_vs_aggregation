@@ -21,9 +21,9 @@ def mutation_percentile(index):
 
 def path_length(structure_history):
     F_history=np.sum(np.array(structure_history)[:,:2],1)
-    #return F_history[1:]-F_history[:-1]
-    if len(structure_history)>1:
-        return [pos for pos,_ in enumerate(F_history[1:]-F_history[:-1]) if _>0][-1]+1
+    increase_pos=[pos for pos,_ in enumerate(F_history[1:]-F_history[:-1]) if _>0]
+    if len(structure_history)>1 and len(increase_pos)>0:
+        return increase_pos[-1]+1
     else:
         return 0
     
@@ -41,7 +41,7 @@ def scale_points(x,y):
 #Random initial vs final
 #===============================================
 
-with open ('fold_degeneracy_properties','r') as fin:
+with open ('fold_degeneracy_properties_random_1.0','r') as fin:
     sequence_all=cPickle.load(fin)
     structure_all=cPickle.load(fin)
     chance_complete_initial=cPickle.load(fin)
@@ -81,8 +81,8 @@ ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=-1,c='C3')
 A_pl=scale_points(np.sum(initial_structures[not_incomplete_complete_pos,:2],1),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=1)
 
-ax1.set_xlim([-2,0.])
-ax1.set_ylim([-1,0.6])
+#ax1.set_xlim([-2,0.])
+#ax1.set_ylim([-1,0.6])
 ax1.set_xlabel(r'Initial Fitness / $L$',fontsize=12)
 ax1.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax1.yaxis.set_label_coords(-0.22,0.5)
@@ -103,7 +103,7 @@ delta=np.sum(final_structures[complete_pos,:2],1)-np.sum(initial_structures[comp
 A_all=scale_points(np.array(map(path_length,structure_all[complete_pos]))/L,delta/L)
 ax2.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 
-ax2.set_xlim([0,1])
+#ax2.set_xlim([0,1])
 ax2.set_xlabel(r'Path length / $L$',fontsize=12)
 ax2.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 ax2.yaxis.set_label_coords(-0.22,0.5)
@@ -122,7 +122,7 @@ hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_comple
 ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3)
 
 #ax3.set_xlim([0.4,1.8])
-ax3.set_ylim([-1,0.6])
+#ax3.set_ylim([-1,0.6])
 ax3.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax3.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax3.yaxis.set_label_coords(-0.22,0.5)
@@ -142,7 +142,7 @@ ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=0,c='C3')
 hydro_pl=scale_points(map(hydrophobicity,final_sequences[not_incomplete_complete_pos]),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
 
-ax4.set_ylim([-1,0.6])
+#ax4.set_ylim([-1,0.6])
 ax4.set_xlabel(r'Final Hydrophobicity',fontsize=12)
 ax4.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax4.yaxis.set_label_coords(-0.22,0.5)
@@ -162,8 +162,8 @@ ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=0,c='C3')
 hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_complete_pos]),map(hydrophobicity,final_sequences[not_incomplete_complete_pos]))
 ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=1,alpha=.7)
 
-ax5.set_xlim([0.3,1.])
-ax5.set_ylim([0.3,1.])
+#ax5.set_xlim([0.3,1.])
+#ax5.set_ylim([0.3,1.])
 ax5.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax5.set_ylabel(r'Final Hydrophobicity', fontsize=12)
 ax5.yaxis.set_label_coords(-0.22,0.5)
