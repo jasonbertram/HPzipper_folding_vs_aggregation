@@ -26,14 +26,14 @@ def generate_initial_sequence(L,H):
     temp[np.random.choice(L,size=int(H*L),replace=False)]=1
     return temp
 
-def generate_initial_sequence_connected(L):
+def generate_initial_sequence_connected(L,odds):
     temp=np.array([1]+(L-2)*[0]+[1])
     temp[1]=np.random.randint(2)
     for _ in range(2,L-1):
         if not any(temp[_-2:_]):
             temp[_]=1
         else:
-            temp[_]=np.min([np.random.randint(5),1])
+            temp[_]=np.min([np.random.randint(odds),1])
 
     return temp
 

@@ -14,17 +14,17 @@ import sys
 #L=int(sys.argv[1])-1
 L=60
 sample_size=1000
-num_sequences=1
-alpha=1.
+alpha=0.
+odds=5
 print "alpha=",alpha
 print "L=",L
 
 start=time.time()
 
-#sequence_history=[generate_initial_sequence_connected(L)]
-sequence_history=[np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1,
-       1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1,
-       1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1])]
+sequence_history=[generate_initial_sequence_connected(L,odds)]
+#sequence_history=[np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1,
+#       1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1,
+#       1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1])]
 mutation_history=[]
 structure_history=[F(sequence_history[-1],alpha,sample_size)]
 for i in range(200):
@@ -88,7 +88,7 @@ for i in range(200):
 
 print (time.time()-start)/60
 
-with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_4_'+str(int(time.time()))[-6:],'w') as fout:
+with open("/N/dc2/scratch/jxb/HPzipper/output"+str(alpha)+'_'+str(sample_size)+'_'+str(L)+'_'+str(odds)+'_'+str(int(time.time()))[-6:],'w') as fout:
     cPickle.dump(L,fout)
     cPickle.dump(sequence_history,fout)
     cPickle.dump(structure_history,fout)
