@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from zip_functions import *
 from analysis_functions import *
 import cPickle
@@ -214,9 +216,10 @@ complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
 
 L=float(len(sequence_all[0][0]))
 
-fig2, (ax1,ax2,ax3) = plt.subplots(nrows=3,ncols=1,figsize=[3.,6.],dpi=300)
 #===========================================================
 #Delt F vs Hamming
+
+fig2, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=[3.,4.],dpi=300)
 
 delta=np.sum(final_structures[incomplete_pos,:2],1)-np.sum(initial_structures[incomplete_pos,:2],1)
 #A_all=scale_points(np.array(map(path_length,structure_all[incomplete_pos]))/L,delta/L)
@@ -237,7 +240,7 @@ ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 ax1.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax1.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 #ax1.yaxis.set_label_coords(-0.22,0.5)
-ax1.annotate('a',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
 #===========================================================
 #Hamming plot
@@ -249,31 +252,61 @@ ax2.scatter(hamming_pl[:,1]/L,hamming_pl[:,0]/L,s=8*hamming_pl[:,2],c='r',zorder
 
 ax2.set_ylabel(r'Path Length / $L$',fontsize=12)
 ax2.set_xlabel(r'Hamming distance / $L$',fontsize=12)
-ax2.annotate('b',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+
+ax2.set_xlabel(r'Substitution number',fontsize=12)
+
+fig2.tight_layout()
 
 #===========================================================
 #Hydrophobocity vs time
+#===========================================================
+fig3, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=[3.,4.],dpi=300)
 
-#data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in complete_pos])
-#points=scale_points(data[:,0],data[:,1])
-#ax3.plot(data[:,0],data[:,1],c='C3')
+#dataframes for seaborn boxplots
+steps=np.concatenate([np.array(range(path_length(structure_all[_])+1)) for _ in complete_pos])
+H=np.concatenate([map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]) for _ in complete_pos])
+df_complete=pd.DataFrame({'steps':steps,'H':H})
 
-for _ in complete_pos:
-    ax3.plot(np.array(range(path_length(structure_all[_])+1))-1.,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=0.1)
+steps=np.concatenate([np.array(range(path_length(structure_all[_])+1)) for _ in incomplete_pos])
+H=np.concatenate([map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]) for _ in incomplete_pos])
+df_incomplete=pd.DataFrame({'steps':steps,'H':H})
+
+ax1.plot(df_complete.groupby('steps').mean(),linewidth=2.,c='C3')
+percentile_10=df_complete.groupby('steps').quantile(0.1)['H']
+percentile_90=df_complete.groupby('steps').quantile(0.9)['H']
+ax1.plot(percentile_10,linewidth=.5,c='C3',alpha=0.5)
+ax1.plot(percentile_90,linewidth=.5,c='C3',alpha=0.5)
+ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C3')
+
+ax1.plot(df_incomplete.groupby('steps').mean(),c='C0')
+percentile_10=df_incomplete.groupby('steps').quantile(0.1)['H']
+percentile_90=df_incomplete.groupby('steps').quantile(0.9)['H']
+ax1.plot(percentile_10,linewidth=.5,c='C0',alpha=0.5)
+ax1.plot(percentile_90,linewidth=.5,c='C0',alpha=0.5)
+ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C0')
+
+ax1.set_xlabel(r'Substitution number',fontsize=12)
+ax1.set_ylabel(r'Hydrophobicity',fontsize=12)
+ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+
+#===========================================================
+#Sample trajectories
+
+np.random.seed(1)
+
+for _ in np.random.choice(complete_pos,5):
+    ax2.plot(np.array(range(path_length(structure_all[_])+1)),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=1)
 
 
-#data=np.concatenate([zip(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1])) for _ in incomplete_pos])
-#points=scale_points(data[:,0],data[:,1])
-#ax3.scatter(points[:,0],points[:,1],s=0.1*points[:,2],c='C0')
+for _ in np.random.choice(incomplete_pos,5):
+    ax2.plot(np.array(range(path_length(structure_all[_])+1))-1,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=1)
 
-for _ in incomplete_pos:
-    ax3.plot(range(path_length(structure_all[_])+1),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=0.1)
+ax2.set_xlabel(r'Substitution number',fontsize=12)
+ax2.set_ylabel(r'Hydrophobicity',fontsize=12)
+ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
-ax3.set_xlabel(r'Substitution number',fontsize=12)
-ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
-ax3.annotate('c',[0.05,0.9],xycoords='axes fraction',fontsize=12)
-
-fig2.tight_layout()
+fig3.tight_layout()
 
 
 #===========================================================
