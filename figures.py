@@ -1,11 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from zip_functions import *
 from analysis_functions import *
 import cPickle
-import os
 
 def mutation_positions(sequence_history):
     return np.array([np.argmax((sequence_history[i]-sequence_history[i-1])**2)-1 for i in range(1,len(sequence_history))])
@@ -43,7 +41,7 @@ def scale_points(x,y):
 #Random initial vs final
 #===============================================
 
-with open ('fold_degeneracy_properties_random_1.0','r') as fin:
+with open ('fold_degeneracy_properties_random_0.5','r') as fin:
     sequence_all=cPickle.load(fin)
     structure_all=cPickle.load(fin)
     chance_complete_initial=cPickle.load(fin)
@@ -74,7 +72,7 @@ fig1, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(nrows=2,ncols=3,figsize=[7.5,
 
 A_all=scale_points(np.sum(initial_structures[incomplete_pos,:2],1),np.sum(final_structures[incomplete_pos,:2],1))
 
-ax1.plot([-2,0.],[-2,0.],'k',zorder=-1)
+#ax1.plot([-2,0.],[-2,0.],'k',zorder=-1)
 ax1.scatter(A_all[:,0]/L,A_all[:,1]/L,s=2*A_all[:,2],zorder=0)
 
 A_pl=scale_points(np.sum(initial_structures[complete_pos,:2],1),np.sum(final_structures[complete_pos,:2],1))
@@ -243,7 +241,7 @@ ax1.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
 #===========================================================
-#Hamming plot
+#Hamming vs steps
 
 ax2.plot([0.25,32/L],[0.25,32/L],'k',zorder=-1)
 
@@ -380,3 +378,43 @@ ax3.set_xlabel(r'Substitution number',fontsize=12)
 
 plt.tight_layout(h_pad=-1.)
 plt.tight_layout()
+
+
+#===========================================================
+#Mutation spectrum
+#===========================================================
+
+
+def num_beneficial(mut):
+    return np.sum([1 for _ in mut if _>=1])
+
+steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in complete_pos])
+num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
+
+df_mut_complete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
+sns.boxplot(x='steps',y='num_ben',data=df_mut_complete)
+
+
+steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in incomplete_pos])
+num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
+
+df_mut_incomplete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
+sns.boxplot(x='steps',y='num_ben',data=df_mut_incomplete)
+
+
+sns.lineplot(x='steps',y='num_ben',data=df_mut_complete)
+sns.lineplot(x='steps',y='num_ben',data=df_mut_incomplete)
+
+
+steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in complete_pos])
+all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
+
+df_all_mutations_complete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
+
+step_filter=df_all_mutations_complete['steps'].isin([1,10,20,30,40,50,60]) & (df_all_mutations_complete['mut_eff']>0)
+sns.violinplot(x='steps',y='mut_eff',data=df_all_mutations_complete[step_filter])
+
+
+sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
+sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==10) & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
+sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==20) & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
