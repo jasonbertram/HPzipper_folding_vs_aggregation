@@ -319,24 +319,39 @@ structure_data=np.array(structure_all[pos])[:,:-1]
 structure_data[:,1]=-structure_data[:,1]
 
 import matplotlib.gridspec as gridspec
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+#from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib.patches import Patch
 
 fig3 = plt.figure(figsize=[6,5],constrained_layout=True,dpi=300)
 gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
 
-ax4=fig3.add_subplot((gs[:-1,0]))
+ax2=fig3.add_subplot((gs[:-1,0]))
+ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
+ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
+im=ax2.imshow(np.array(sequence_all[pos])[0:-1,1:-1],extent=[1,59,68,1],cmap='binary')
+ax2.set_xlabel(r'Sequence position',fontsize=12)
+ax2.set_ylabel(r'Substitution number',fontsize=12)
+ax2.xaxis.set_label_coords(0.5,-0.1)
+
+legend_elements = [Patch(facecolor='k', edgecolor='k',label='Hydrophobic'),
+                   Patch(facecolor='white', edgecolor='k',label='Polar')]
+
+ax2.legend(handles=legend_elements, ncol=2, loc='upper center',fontsize=10,bbox_to_anchor=(0.5, 1.11),frameon=False)
+
+
+ax4=fig3.add_subplot((gs[:-1,1]))
 #ax4.plot(map(hydrophobicity,sequence_all[pos]))
 #im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
 strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
 #im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
-ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.k',markersize=2)
+ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
+ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
 im=ax4.imshow(strong_beneficials,extent=[1,59,68,1])
 ax4.plot([36.,36],[1.,68],c='white',linewidth=1)
 ax4.plot([37.1,37.1],[1.,68],c='white',linewidth=1)
 ax4.set_xlabel(r'Sequence position',fontsize=12)
-ax4.set_ylabel(r'Substitution number',fontsize=12)
-ax4.set_title(r'Beneficial mutations')
+ttl=ax4.set_title(r'Possible Mutations')
+ttl.set_position([0.5,.98])
 ax4.xaxis.set_label_coords(0.5,-0.1)
 #axins = inset_axes(ax4,
 #                   width="100%",  # width = 5% of parent_bbox width
@@ -349,16 +364,6 @@ ax4.xaxis.set_label_coords(0.5,-0.1)
 #fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
 #ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
 #ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
-
-ax4=fig3.add_subplot((gs[:-1,1]))
-im=ax4.imshow(np.array(sequence_all[pos])[1:-1],extent=[1,59,68,1],cmap='binary')
-ax4.set_xlabel(r'Sequence position',fontsize=12)
-ax4.xaxis.set_label_coords(0.5,-0.1)
-
-legend_elements = [Patch(facecolor='k', edgecolor='k',label='Hydrophobic'),
-                   Patch(facecolor='white', edgecolor='k',label='Polar')]
-
-ax4.legend(handles=legend_elements, ncol=2, loc='upper center',fontsize=10,bbox_to_anchor=(0.5, 1.1),frameon=False)
 
 ax1=fig3.add_subplot(gs[2,0])
 ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
@@ -373,7 +378,7 @@ ax3=fig3.add_subplot(gs[2,1])
 ax3.plot(map(hydrophobicity,sequence_all[pos]))
 ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
 ax3.set_ylim([0.5,1])
-ax3.set_yticklabels(['.5','','1'])
+#ax3.set_yticklabels(['.5','','1'])
 ax3.set_xlabel(r'Substitution number',fontsize=12)
 
 plt.tight_layout(h_pad=-1.)
@@ -418,3 +423,11 @@ sns.violinplot(x='steps',y='mut_eff',data=df_all_mutations_complete[step_filter]
 sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
 sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==10) & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
 sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==20) & (df_all_mutations_complete['mut_eff']>-1)]['mut_eff'])
+
+
+
+df_F_complete=pd.DataFrame(np.concatenate([np.array(zip(range(len(structure_all[_])),np.sum(np.array(structure_all[_])[:,:2],1))) for _ in complete_pos]),columns=['steps','F'])
+df_F_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(len(structure_all[_])),np.sum(np.array(structure_all[_])[:,:2],1))) for _ in incomplete_pos]),columns=['steps','F'])
+
+sns.lineplot(x='steps',y='F',data=df_F_complete[df_F_complete['steps']<75])
+sns.lineplot(x='steps',y='F',data=df_F_incomplete[df_F_incomplete['steps']<75])
