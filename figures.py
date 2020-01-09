@@ -433,8 +433,10 @@ sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==
 sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==30)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
 sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==30) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'])
 
-sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_complete[df_all_mutations_complete['mut_eff']>0],estimator=np.median)
-sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_incomplete[df_all_mutations_incomplete['mut_eff']>0],estimator=np.median)
+query=(df_all_mutations_complete['mut_eff']>0) & (df_all_mutations_complete['steps']<60)
+sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_complete[query],estimator=np.median)
+query=(df_all_mutations_incomplete['mut_eff']>0) & (df_all_mutations_incomplete['steps']<60)
+sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_incomplete[query],estimator=np.median)
 
 
 
@@ -459,8 +461,8 @@ df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(
 sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
 sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
 
-df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.mode([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
-df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.mode([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
+df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.median([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
+df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.median([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
 
 sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
 sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
