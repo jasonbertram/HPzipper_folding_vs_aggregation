@@ -257,55 +257,95 @@ ax2.set_xlabel(r'Substitution number',fontsize=12)
 
 fig2.tight_layout()
 
+
+#===========================================================
+#Hydrophobicity & mutation effects over time
+#===========================================================
+
+
 #===========================================================
 #Hydrophobocity vs time
-#===========================================================
-fig3, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=[3.,4.],dpi=300)
+#dataframes for pandas/seaborn 
+df_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),\
+    [mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))],\
+    map(hydrophobicity,sequence_all[_][1:path_length(structure_all[_])+1]),\
+    np.sum(np.array(structure_all[_])[1:path_length(structure_all[_])+1,:2],1))) for _ in complete_pos]),\
+    columns=['steps','deltF','H','F'])
+    
+df_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),\
+    [mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))],\
+    map(hydrophobicity,sequence_all[_][1:path_length(structure_all[_])+1]),\
+    np.sum(np.array(structure_all[_])[1:path_length(structure_all[_])+1,:2],1))) for _ in incomplete_pos]),\
+    columns=['steps','deltF','H','F'])
 
-#dataframes for seaborn boxplots
-steps=np.concatenate([np.array(range(path_length(structure_all[_])+1)) for _ in complete_pos])
-H=np.concatenate([map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]) for _ in complete_pos])
-df_complete=pd.DataFrame({'steps':steps,'H':H})
+fig3, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,figsize=[6.,4.],dpi=300)
 
-steps=np.concatenate([np.array(range(path_length(structure_all[_])+1)) for _ in incomplete_pos])
-H=np.concatenate([map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]) for _ in incomplete_pos])
-df_incomplete=pd.DataFrame({'steps':steps,'H':H})
+#Truncate plot range of cohorts to avoid low sample sizes
+steps_complete=(df_complete['steps']<=75)
+steps_incomplete=(df_incomplete['steps']<=50)
 
-ax1.plot(df_complete.groupby('steps').mean(),linewidth=2.,c='C3')
-percentile_10=df_complete.groupby('steps').quantile(0.1)['H']
-percentile_90=df_complete.groupby('steps').quantile(0.9)['H']
-ax1.plot(percentile_10,linewidth=.5,c='C3',alpha=0.5)
-ax1.plot(percentile_90,linewidth=.5,c='C3',alpha=0.5)
-ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C3')
+ax1.plot(df_complete[steps_complete][['steps','H']].groupby('steps').mean(),linewidth=2.,c='C3')
+percentile_10=df_complete[steps_complete][['steps','H']].groupby('steps').quantile(0.1)['H']
+percentile_90=df_complete[steps_complete][['steps','H']].groupby('steps').quantile(0.9)['H']
+ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C3',lw=0.5)
 
-ax1.plot(df_incomplete.groupby('steps').mean(),c='C0')
-percentile_10=df_incomplete.groupby('steps').quantile(0.1)['H']
-percentile_90=df_incomplete.groupby('steps').quantile(0.9)['H']
-ax1.plot(percentile_10,linewidth=.5,c='C0',alpha=0.5)
-ax1.plot(percentile_90,linewidth=.5,c='C0',alpha=0.5)
-ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C0')
+ax1.plot(df_incomplete[steps_incomplete][['steps','H']].groupby('steps').mean(),c='C0')
+percentile_10=df_incomplete[steps_incomplete][['steps','H']].groupby('steps').quantile(0.1)['H']
+percentile_90=df_incomplete[steps_incomplete][['steps','H']].groupby('steps').quantile(0.9)['H']
+ax1.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C0',lw=0.5)
 
+ax1.set_xlim([0,75])
 ax1.set_xlabel(r'Substitution number',fontsize=12)
 ax1.set_ylabel(r'Hydrophobicity',fontsize=12)
 ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
 #===========================================================
-#Sample trajectories
+#Fitness
 
-np.random.seed(1)
+ax3.plot(df_complete[steps_complete][['steps','F']].groupby('steps').mean(),linewidth=2.,c='C3')
+percentile_10=df_complete[steps_complete][['steps','F']].groupby('steps').quantile(0.1)['F']
+percentile_90=df_complete[steps_complete][['steps','F']].groupby('steps').quantile(0.9)['F']
+ax3.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C3',lw=0.5)
 
-for _ in np.random.choice(complete_pos,5):
-    ax2.plot(np.array(range(path_length(structure_all[_])+1)),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=1)
+ax3.plot(df_incomplete[steps_incomplete][['steps','F']].groupby('steps').mean(),c='C0')
+percentile_10=df_incomplete[steps_incomplete][['steps','F']].groupby('steps').quantile(0.1)['F']
+percentile_90=df_incomplete[steps_incomplete][['steps','F']].groupby('steps').quantile(0.9)['F']
+ax3.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C0',lw=0.5)
 
+ax3.set_xlim([0,75])
+ax3.set_xlabel(r'Substitution number',fontsize=12)
+ax3.set_ylabel(r'Fitness $\overline{F}$',fontsize=12)
+ax3.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
-for _ in np.random.choice(incomplete_pos,5):
-    ax2.plot(np.array(range(path_length(structure_all[_])+1))-1,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=1)
+#===========================================================
+#Mutation effects vs time
 
+ax2.plot(df_complete[steps_complete][['steps','deltF']].groupby('steps').median(),linewidth=2.,c='C3')
+percentile_10=df_complete[steps_complete][['steps','deltF']].groupby('steps').quantile(0.1)['deltF']
+percentile_90=df_complete[steps_complete][['steps','deltF']].groupby('steps').quantile(0.9)['deltF']
+ax2.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C3',lw=0.5)
+
+ax2.plot(df_incomplete[steps_incomplete][['steps','deltF']].groupby('steps').median(),c='C0')
+percentile_10=df_incomplete[steps_incomplete][['steps','deltF']].groupby('steps').quantile(0.1)['deltF']
+percentile_90=df_incomplete[steps_incomplete][['steps','deltF']].groupby('steps').quantile(0.9)['deltF']
+ax2.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5,color='C0',lw=0.5)
+
+ax2.set_xlim([0,75])
+ax2.set_ylim([0,6])
 ax2.set_xlabel(r'Substitution number',fontsize=12)
-ax2.set_ylabel(r'Hydrophobicity',fontsize=12)
-ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+ax2.set_ylabel(r'Fixed Mutation $\Delta\overline{F}$',fontsize=12)
+ax2.annotate('c',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+
+
+
+
+#sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60],estimator=np.median)
+#sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60],estimator=np.median)
+
+
 
 fig3.tight_layout()
+
 
 
 #===========================================================
@@ -451,8 +491,9 @@ sns.lineplot(x='steps',y='F',data=df_F_incomplete[df_F_incomplete['steps']<75])
 df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
 df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
 
-sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
-sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
+sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60],estimator=np.median)
+sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60],estimator=np.median)
+
 
 
 df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.mean([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
@@ -478,5 +519,23 @@ sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps
 
 
 #number of trajectories vs time
-sns.countplot(x='steps',data=df_deltF_complete[df_deltF_complete['steps'].isin(range(0,100,10))])
-sns.countplot(x='steps',data=df_deltF_incomplete[df_deltF_incomplete['steps'].isin(range(0,100,10))])
+sns.countplot(x='steps',data=df_deltF_complete[df_deltF_complete['steps'].isin(range(0,100,5))])
+sns.countplot(x='steps',data=df_deltF_incomplete[df_deltF_incomplete['steps'].isin(range(0,100,5))])
+
+
+##===========================================================
+##Sample trajectories
+#
+#np.random.seed(1)
+#
+#for _ in np.random.choice(complete_pos,5):
+#    ax2.plot(np.array(range(path_length(structure_all[_])+1)),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=1)
+#
+#
+#for _ in np.random.choice(incomplete_pos,5):
+#    ax2.plot(np.array(range(path_length(structure_all[_])+1))-1,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=1)
+#
+#ax2.set_xlabel(r'Substitution number',fontsize=12)
+#ax2.set_ylabel(r'Hydrophobicity',fontsize=12)
+#ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+#
