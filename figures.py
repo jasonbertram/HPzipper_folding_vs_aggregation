@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib.gridspec as gridspec
 from zip_functions import *
 from analysis_functions import *
 import cPickle
@@ -265,7 +266,9 @@ fig2.tight_layout()
 
 #===========================================================
 #Hydrophobocity vs time
-#dataframes for pandas/seaborn 
+#dataframes for pandas/seaborn
+
+#hydrophobicity, fitness and mutation effects of mutations that occured 
 df_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),\
     [mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))],\
     map(hydrophobicity,sequence_all[_][1:path_length(structure_all[_])+1]),\
@@ -278,11 +281,24 @@ df_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(struct
     np.sum(np.array(structure_all[_])[1:path_length(structure_all[_])+1,:2],1))) for _ in incomplete_pos]),\
     columns=['steps','deltF','H','F'])
 
-fig3, ((ax1,ax2),(ax3,ax4)) = plt.subplots(nrows=2,ncols=2,figsize=[6.,4.],dpi=300)
+#all mutations that were possible (DFE)
+steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in complete_pos])
+all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
+df_all_mutations_complete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
+
+steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in incomplete_pos])
+all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
+df_all_mutations_incomplete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
+
+    
+fig3 = plt.figure(figsize=[6,4.],dpi=300)
+gs = gridspec.GridSpec(nrows=4, ncols=2, figure=fig3)
 
 #Truncate plot range of cohorts to avoid low sample sizes
 steps_complete=(df_complete['steps']<=75)
 steps_incomplete=(df_incomplete['steps']<=50)
+
+ax1=fig3.add_subplot((gs[:-2,0]))
 
 ax1.plot(df_complete[steps_complete][['steps','H']].groupby('steps').mean(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','H']].groupby('steps').quantile(0.1)['H']
@@ -302,6 +318,8 @@ ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Fitness
 
+ax3=fig3.add_subplot((gs[2:,0]))
+
 ax3.plot(df_complete[steps_complete][['steps','F']].groupby('steps').mean(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','F']].groupby('steps').quantile(0.1)['F']
 percentile_90=df_complete[steps_complete][['steps','F']].groupby('steps').quantile(0.9)['F']
@@ -320,6 +338,8 @@ ax3.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Mutation effects vs time
 
+ax2=fig3.add_subplot((gs[:-2,1]))
+
 ax2.plot(df_complete[steps_complete][['steps','deltF']].groupby('steps').median(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','deltF']].groupby('steps').quantile(0.1)['deltF']
 percentile_90=df_complete[steps_complete][['steps','deltF']].groupby('steps').quantile(0.9)['deltF']
@@ -333,16 +353,33 @@ ax2.fill_between(range(len(percentile_10)),percentile_10,percentile_90,alpha=0.5
 ax2.set_xlim([0,75])
 ax2.set_ylim([0,6])
 ax2.set_xlabel(r'Substitution number',fontsize=12)
-ax2.set_ylabel(r'Fixed Mutation $\Delta\overline{F}$',fontsize=12)
+ax2.set_ylabel(r'$\Delta\overline{F}$ (Fixed Mutns)',fontsize=12)
 ax2.annotate('c',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 
+#===========================================================
+#DFE
 
+ax4=fig3.add_subplot((gs[2,1]))
 
+sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'],\
+                                       ax=ax4,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C3')
+sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==1) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'],\
+                                         ax=ax4,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C0')
+lam=np.mean(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
+#ax4.set_yscale('log')
+ax4.set_xlim([0,10])
+ax4.annotate('DFE Initial',[0.5,0.65],xycoords='axes fraction',fontsize=10)
+              
+ax5=fig3.add_subplot((gs[3,1]))
 
-#sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60],estimator=np.median)
-#sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60],estimator=np.median)
-
-
+sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==10)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'],\
+                                       ax=ax5,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C3')
+sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==10) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'],\
+                                         ax=ax5,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C0')
+#ax5.set_yscale('log')
+ax5.set_xlim([0,10])
+ax5.set_xlabel('$\Delta\overline{F}$ (Possible Beneficial Mutns)')
+ax5.annotate('DFE After 10 Subs.',[0.4,0.65],xycoords='axes fraction',fontsize=10)
 
 fig3.tight_layout()
 
@@ -359,7 +396,6 @@ position_data=mutation_positions(sequence_all[pos])
 structure_data=np.array(structure_all[pos])[:,:-1]
 structure_data[:,1]=-structure_data[:,1]
 
-import matplotlib.gridspec as gridspec
 #from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib.patches import Patch
 
@@ -436,15 +472,15 @@ def num_beneficial(mut):
 
 steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in complete_pos])
 num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
-
 df_mut_complete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
+
 sns.boxplot(x='steps',y='num_ben',data=df_mut_complete)
 
 
 steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in incomplete_pos])
 num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
-
 df_mut_incomplete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
+
 sns.boxplot(x='steps',y='num_ben',data=df_mut_incomplete)
 
 
@@ -452,13 +488,6 @@ sns.lineplot(x='steps',y='num_ben',data=df_mut_complete)
 sns.lineplot(x='steps',y='num_ben',data=df_mut_incomplete)
 
 
-steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in complete_pos])
-all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
-df_all_mutations_complete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
-
-steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in incomplete_pos])
-all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
-df_all_mutations_incomplete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
 
 
 sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
@@ -477,44 +506,6 @@ query=(df_all_mutations_complete['mut_eff']>0) & (df_all_mutations_complete['ste
 sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_complete[query],estimator=np.median)
 query=(df_all_mutations_incomplete['mut_eff']>0) & (df_all_mutations_incomplete['steps']<60)
 sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_incomplete[query],estimator=np.median)
-
-
-
-df_F_complete=pd.DataFrame(np.concatenate([np.array(zip(range(len(structure_all[_])),np.sum(np.array(structure_all[_])[:,:2],1))) for _ in complete_pos]),columns=['steps','F'])
-df_F_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(len(structure_all[_])),np.sum(np.array(structure_all[_])[:,:2],1))) for _ in incomplete_pos]),columns=['steps','F'])
-
-sns.lineplot(x='steps',y='F',data=df_F_complete[df_F_complete['steps']<75])
-sns.lineplot(x='steps',y='F',data=df_F_incomplete[df_F_incomplete['steps']<75])
-
-
-
-df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
-df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
-
-sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60],estimator=np.median)
-sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60],estimator=np.median)
-
-
-
-df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.mean([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
-df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.mean([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
-
-sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
-sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
-
-df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.median([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
-df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.median([m for m in mutations[_][i] if m>0]) for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
-
-sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
-sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
-
-df_deltF_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.max(mutations[_][i]) for i in range(path_length(structure_all[_]))])) for _ in complete_pos]),columns=['steps','F'])
-df_deltF_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),[np.max(mutations[_][i]) for i in range(path_length(structure_all[_]))])) for _ in incomplete_pos]),columns=['steps','F'])
-
-sns.lineplot(x='steps',y='F',data=df_deltF_complete[df_deltF_complete['steps']<60])
-sns.lineplot(x='steps',y='F',data=df_deltF_incomplete[df_deltF_incomplete['steps']<60])
-
-
 
 
 
