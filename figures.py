@@ -25,7 +25,7 @@ def path_length(structure_history):
     F_history=np.sum(np.array(structure_history)[:,:2],1)
     increase_pos=[pos for pos,_ in enumerate(F_history[1:]-F_history[:-1]) if _>0]
     if len(structure_history)>1 and len(increase_pos)>0:
-        return increase_pos[-1]+1
+        #return increase_pos[-1]+1
     else:
         return 0
     
@@ -43,7 +43,7 @@ def scale_points(x,y):
 #Random initial vs final
 #===============================================
 
-with open ('fold_degeneracy_properties_random_0.5','r') as fin:
+with open ('fold_degeneracy_properties_random_2.0','r') as fin:
     sequence_all=cPickle.load(fin)
     structure_all=cPickle.load(fin)
     chance_complete_initial=cPickle.load(fin)
@@ -463,70 +463,12 @@ plt.tight_layout()
 
 
 #===========================================================
-#Mutation spectrum
+#Misc
 #===========================================================
 
 
 def num_beneficial(mut):
     return np.sum([1 for _ in mut if _>=1])
 
-steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in complete_pos])
-num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
-df_mut_complete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
 
-sns.boxplot(x='steps',y='num_ben',data=df_mut_complete)
-
-
-steps=np.concatenate([np.array(range(1,path_length(structure_all[_])+1)) for _ in incomplete_pos])
-num_ben=np.concatenate([map(num_beneficial,mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
-df_mut_incomplete=pd.DataFrame({'steps':steps,'num_ben':num_ben})
-
-sns.boxplot(x='steps',y='num_ben',data=df_mut_incomplete)
-
-
-sns.lineplot(x='steps',y='num_ben',data=df_mut_complete)
-sns.lineplot(x='steps',y='num_ben',data=df_mut_incomplete)
-
-
-
-
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==1) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'])
-
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==10)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==10) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'])
-
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==20)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==20) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'])
-
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==30)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==30) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'])
-
-query=(df_all_mutations_complete['mut_eff']>0) & (df_all_mutations_complete['steps']<60)
-sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_complete[query],estimator=np.median)
-query=(df_all_mutations_incomplete['mut_eff']>0) & (df_all_mutations_incomplete['steps']<60)
-sns.lineplot(x='steps',y='mut_eff',data=df_all_mutations_incomplete[query],estimator=np.median)
-
-
-
-#number of trajectories vs time
-sns.countplot(x='steps',data=df_deltF_complete[df_deltF_complete['steps'].isin(range(0,100,5))])
-sns.countplot(x='steps',data=df_deltF_incomplete[df_deltF_incomplete['steps'].isin(range(0,100,5))])
-
-
-##===========================================================
-##Sample trajectories
-#
-#np.random.seed(1)
-#
-#for _ in np.random.choice(complete_pos,5):
-#    ax2.plot(np.array(range(path_length(structure_all[_])+1)),map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C3',linewidth=1,alpha=1)
-#
-#
-#for _ in np.random.choice(incomplete_pos,5):
-#    ax2.plot(np.array(range(path_length(structure_all[_])+1))-1,map(hydrophobicity,sequence_all[_][:path_length(structure_all[_])+1]),c='C0',linewidth=1.,alpha=1)
-#
-#ax2.set_xlabel(r'Substitution number',fontsize=12)
-#ax2.set_ylabel(r'Hydrophobicity',fontsize=12)
-#ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
-#
+fixed_mutation_structure=np.concatenate([np.array(_)[1:path_length(_)+1,:2]-np.array(_)[0:path_length(_),:2] for _ in structure_all])
