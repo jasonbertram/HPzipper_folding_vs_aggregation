@@ -25,7 +25,7 @@ def path_length(structure_history):
     F_history=np.sum(np.array(structure_history)[:,:2],1)
     increase_pos=[pos for pos,_ in enumerate(F_history[1:]-F_history[:-1]) if _>0]
     if len(structure_history)>1 and len(increase_pos)>0:
-        #return increase_pos[-1]+1
+        return increase_pos[-1]-increase_pos[0]+1
     else:
         return 0
     
@@ -105,7 +105,7 @@ delta=np.sum(final_structures[complete_pos,:2],1)-np.sum(initial_structures[comp
 A_all=scale_points(np.array(map(path_length,structure_all[complete_pos]))/L,delta/L)
 ax2.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 
-#ax2.set_xlim([0,1])
+ax2.set_xlim([0,1.5])
 ax2.set_xlabel(r'Path length / $L$',fontsize=12)
 ax2.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 ax2.yaxis.set_label_coords(-0.22,0.5)
@@ -164,8 +164,8 @@ ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=0,c='C3')
 hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_complete_pos]),map(hydrophobicity,final_sequences[not_incomplete_complete_pos]))
 ax5.scatter(hydro_pl[:,0],hydro_pl[:,1],s=2*hydro_pl[:,2],zorder=1,alpha=.7)
 
-#ax5.set_xlim([0.3,1.])
-#ax5.set_ylim([0.3,1.])
+ax5.set_xlim([0.3,1.])
+ax5.set_ylim([0.3,1.])
 ax5.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax5.set_ylabel(r'Final Hydrophobicity', fontsize=12)
 ax5.yaxis.set_label_coords(-0.22,0.5)
@@ -281,24 +281,24 @@ df_incomplete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(struct
     np.sum(np.array(structure_all[_])[1:path_length(structure_all[_])+1,:2],1))) for _ in incomplete_pos]),\
     columns=['steps','deltF','H','F'])
 
-#all mutations that were possible (DFE)
-steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in complete_pos])
-all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in complete_pos])
-df_all_mutations_complete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
+#S and A effects for DFE
+fixed_mutation_structure=np.concatenate([np.array(_)[1:path_length(_)+1,:2]-np.array(_)[0:path_length(_),:2] for _ in structure_all[complete_pos]])
+steps=np.concatenate([np.array(np.sort(range(1,path_length(structure_all[_])+1))) for _ in complete_pos])
+df_fms_complete=pd.DataFrame({'steps':steps,'dS':fixed_mutation_structure[:,0],'dA':fixed_mutation_structure[:,1]})
 
-steps=np.concatenate([np.array(np.sort(58*range(1,path_length(structure_all[_])+1))) for _ in incomplete_pos])
-all_mutations=np.concatenate([np.concatenate(mutations[_][:path_length(structure_all[_])]) for _ in incomplete_pos])
-df_all_mutations_incomplete=pd.DataFrame({'steps':steps,'mut_eff':all_mutations})
+fixed_mutation_structure=np.concatenate([np.array(_)[1:path_length(_)+1,:2]-np.array(_)[0:path_length(_),:2] for _ in structure_all[incomplete_pos]])
+steps=np.concatenate([np.array(np.sort(range(1,path_length(structure_all[_])+1))) for _ in incomplete_pos])
+df_fms_incomplete=pd.DataFrame({'steps':steps,'dS':fixed_mutation_structure[:,0],'dA':fixed_mutation_structure[:,1]})
 
-    
-fig3 = plt.figure(figsize=[6,4.],dpi=300)
-gs = gridspec.GridSpec(nrows=4, ncols=2, figure=fig3)
+
+fig3 = plt.figure(figsize=[6,4.],dpi=300,constrained_layout=True)
+gs = gridspec.GridSpec(nrows=10, ncols=4, figure=fig3)
 
 #Truncate plot range of cohorts to avoid low sample sizes
 steps_complete=(df_complete['steps']<=75)
 steps_incomplete=(df_incomplete['steps']<=50)
 
-ax1=fig3.add_subplot((gs[:-2,0]))
+ax1=fig3.add_subplot((gs[:5,:-2]))
 
 ax1.plot(df_complete[steps_complete][['steps','H']].groupby('steps').mean(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','H']].groupby('steps').quantile(0.1)['H']
@@ -318,7 +318,7 @@ ax1.annotate('a',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Fitness
 
-ax3=fig3.add_subplot((gs[2:,0]))
+ax3=fig3.add_subplot((gs[5:,:-2]))
 
 ax3.plot(df_complete[steps_complete][['steps','F']].groupby('steps').mean(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','F']].groupby('steps').quantile(0.1)['F']
@@ -338,7 +338,7 @@ ax3.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #Mutation effects vs time
 
-ax2=fig3.add_subplot((gs[:-2,1]))
+ax2=fig3.add_subplot((gs[:5,2:]))
 
 ax2.plot(df_complete[steps_complete][['steps','deltF']].groupby('steps').median(),linewidth=2.,c='C3')
 percentile_10=df_complete[steps_complete][['steps','deltF']].groupby('steps').quantile(0.1)['deltF']
@@ -359,29 +359,34 @@ ax2.annotate('c',[0.01,0.9],xycoords='axes fraction',fontsize=12)
 #===========================================================
 #DFE
 
-ax4=fig3.add_subplot((gs[2,1]))
+ax4=fig3.add_subplot((gs[6:,2]))
 
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'],\
-                                       ax=ax4,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C3')
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==1) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'],\
-                                         ax=ax4,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C0')
-lam=np.mean(df_all_mutations_complete[(df_all_mutations_complete['steps']==1)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'])
-#ax4.set_yscale('log')
-ax4.set_xlim([0,10])
-ax4.annotate('DFE Initial',[0.5,0.65],xycoords='axes fraction',fontsize=10)
+step=10
+#plt.plot([-10,10],[10,-10],'k',linewidth=1)
+plt.plot([0,0],[10,-10],'k',linewidth=1)
+plt.plot([-10,10],[0,0],'k',linewidth=1)
+plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],s=1,c='C3',zorder=4)
+plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],s=1,c='C0',zorder=3)
+plt.ylabel('-$\Delta\overline{A}$',fontsize=12)
+plt.xlim([-2,5])
+plt.ylim([-2,10])
+
+ax4.annotate('$\Delta\overline{S}$ (Fixed Mutations)',[0.4,-0.35],xycoords='axes fraction',fontsize=12)
+ax4.annotate('After 10 Subs.',[0.0,1.1],xycoords='axes fraction',fontsize=10)
+ax4.annotate('d',[-0.2,1.1],xycoords='axes fraction',fontsize=12)
               
-ax5=fig3.add_subplot((gs[3,1]))
+ax5=fig3.add_subplot((gs[6:,3]))
 
-sns.distplot(df_all_mutations_complete[(df_all_mutations_complete['steps']==10)  & (df_all_mutations_complete['mut_eff']>0)]['mut_eff'],\
-                                       ax=ax5,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C3')
-sns.distplot(df_all_mutations_incomplete[(df_all_mutations_incomplete['steps']==10) & (df_all_mutations_incomplete['mut_eff']>0)]['mut_eff'],\
-                                         ax=ax5,kde=False,norm_hist=True,bins=np.linspace(0,10,30),axlabel=False,color='C0')
-#ax5.set_yscale('log')
-ax5.set_xlim([0,10])
-ax5.set_xlabel('$\Delta\overline{F}$ (Possible Beneficial Mutns)')
-ax5.annotate('DFE After 10 Subs.',[0.4,0.65],xycoords='axes fraction',fontsize=10)
+step=30
+#plt.plot([-10,10],[10,-10],'k',linewidth=1)
+plt.plot([0,0],[10,-10],'k',linewidth=1)
+plt.plot([-10,10],[0,0],'k',linewidth=1)
+plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],s=1,c='C3',zorder=4)
+plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],s=1,c='C0',zorder=3)
+plt.xlim([-2,5])
+plt.ylim([-2,10])
 
-fig3.tight_layout()
+ax5.annotate('After 30 Subs.',[0.0,1.1],xycoords='axes fraction',fontsize=10)
 
 
 
@@ -462,13 +467,3 @@ plt.tight_layout(h_pad=-1.)
 plt.tight_layout()
 
 
-#===========================================================
-#Misc
-#===========================================================
-
-
-def num_beneficial(mut):
-    return np.sum([1 for _ in mut if _>=1])
-
-
-fixed_mutation_structure=np.concatenate([np.array(_)[1:path_length(_)+1,:2]-np.array(_)[0:path_length(_),:2] for _ in structure_all])
