@@ -222,21 +222,21 @@ L=float(len(sequence_all[0][0]))
 fig2, (ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=[3.,4.],dpi=300)
 
 delta=np.sum(final_structures[incomplete_pos,:2],1)-np.sum(initial_structures[incomplete_pos,:2],1)
-#A_all=scale_points(np.array(map(path_length,structure_all[incomplete_pos]))/L,delta/L)
-A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[incomplete_pos]/L,delta/L)
+A_all=scale_points(np.array(map(path_length,structure_all[incomplete_pos]))/L,delta/L)
+#A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[incomplete_pos]/L,delta/L)
 ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
 
-delta=np.sum(final_structures[not_incomplete_complete_pos,:2],1)-np.sum(initial_structures[not_incomplete_complete_pos,:2],1)
+#delta=np.sum(final_structures[not_incomplete_complete_pos,:2],1)-np.sum(initial_structures[not_incomplete_complete_pos,:2],1)
 #A_all=scale_points(np.array(map(path_length,structure_all[not_incomplete_pos]))/L,delta/L)
-A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[not_incomplete_complete_pos]/L,delta/L)
-ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
+##A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[not_incomplete_complete_pos]/L,delta/L)
+#ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0)
 
 delta=np.sum(final_structures[complete_pos,:2],1)-np.sum(initial_structures[complete_pos,:2],1)
-#A_all=scale_points(np.array(map(path_length,structure_all[complete_pos]))/L,delta/L)
-A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[complete_pos]/L,delta/L)
+A_all=scale_points(np.array(map(path_length,structure_all[complete_pos]))/L,delta/L)
+#A_all=scale_points(np.sum((initial_sequences - final_sequences)**2,1)[complete_pos]/L,delta/L)
 ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 
-#ax2.set_xlim([0,1])
+ax1.set_xlim([0,1.5])
 ax1.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax1.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 #ax1.yaxis.set_label_coords(-0.22,0.5)
@@ -253,8 +253,6 @@ ax2.scatter(hamming_pl[:,1]/L,hamming_pl[:,0]/L,s=8*hamming_pl[:,2],c='r',zorder
 ax2.set_ylabel(r'Path Length / $L$',fontsize=12)
 ax2.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax2.annotate('b',[0.01,0.9],xycoords='axes fraction',fontsize=12)
-
-ax2.set_xlabel(r'Substitution number',fontsize=12)
 
 fig2.tight_layout()
 
@@ -372,7 +370,7 @@ plt.xlim([-2,5])
 plt.ylim([-2,10])
 
 ax4.annotate('$\Delta\overline{S}$ (Fixed Mutations)',[0.4,-0.35],xycoords='axes fraction',fontsize=12)
-ax4.annotate('After 10 Subs.',[0.0,1.1],xycoords='axes fraction',fontsize=10)
+ax4.annotate('10th Substitution',[0.0,1.1],xycoords='axes fraction',fontsize=8)
 ax4.annotate('d',[-0.2,1.1],xycoords='axes fraction',fontsize=12)
               
 ax5=fig3.add_subplot((gs[6:,3]))
@@ -386,7 +384,7 @@ plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_inc
 plt.xlim([-2,5])
 plt.ylim([-2,10])
 
-ax5.annotate('After 30 Subs.',[0.0,1.1],xycoords='axes fraction',fontsize=10)
+ax5.annotate('30th Substitution',[0.0,1.1],xycoords='axes fraction',fontsize=8)
 
 
 
