@@ -40,7 +40,7 @@ def scale_points(x,y):
 
 
 #===============================================
-#Random initial vs final
+#Data for random initial vs final
 #===============================================
 
 with open ('fold_degeneracy_properties_random_2.0','r') as fin:
@@ -67,6 +67,11 @@ not_incomplete_complete_pos=[pos for pos,_ in enumerate(chance_complete_final) i
 complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
 
 L=float(len(sequence_all[0][0]))
+
+#===============================================
+#Summary figures for random initial vs final (Fig 2)
+#===============================================
+
 
 fig1, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(nrows=2,ncols=3,figsize=[7.5,5.0])
 #===============================================
@@ -189,7 +194,7 @@ plt.tight_layout(w_pad=-.5)
 
 
 #===========================================================
-#Mazes
+#Data for fixed initial sequence (Figs 3-5)
 #===========================================================
 
 with open ('fold_degeneracy_properties_fixed','r') as fin:
@@ -215,6 +220,10 @@ not_incomplete_complete_pos=[pos for pos,_ in enumerate(chance_complete_final) i
 complete_pos=[pos for pos,_ in enumerate(chance_complete_final) if _==1.]
 
 L=float(len(sequence_all[0][0]))
+
+#===========================================================
+#Fitness change and hamming distance for fixed initial sequence (Fig 3)
+#===========================================================
 
 #===========================================================
 #Delt F vs Hamming
@@ -258,15 +267,89 @@ fig2.tight_layout()
 
 
 #===========================================================
-#Hydrophobicity & mutation effects over time
+#Maze example (Fig 4)
 #===========================================================
 
+long_path_pos=[_ for pos,_ in enumerate(complete_pos) if path_length(structure_all[_])>60]
+pos=long_path_pos[0]
+#may take a few minutes to compute chance complete
+chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos][:path_length(structure_all[pos])+1])
+position_data=mutation_positions(sequence_all[pos])
+structure_data=np.array(structure_all[pos])[:,:-1]
+structure_data[:,1]=-structure_data[:,1]
+
+#from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from matplotlib.patches import Patch
+
+fig3 = plt.figure(figsize=[6,5],constrained_layout=True,dpi=300)
+gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
+
+ax2=fig3.add_subplot((gs[:-1,0]))
+ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
+ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
+im=ax2.imshow(np.array(sequence_all[pos])[0:-1,1:-1],extent=[1,59,68,1],cmap='binary')
+ax2.set_xlabel(r'Sequence position',fontsize=12)
+ax2.set_ylabel(r'Substitution number',fontsize=12)
+ax2.xaxis.set_label_coords(0.5,-0.1)
+
+legend_elements = [Patch(facecolor='k', edgecolor='k',label='Hydrophobic'),
+                   Patch(facecolor='white', edgecolor='k',label='Polar')]
+
+ax2.legend(handles=legend_elements, ncol=2, loc='upper center',fontsize=10,bbox_to_anchor=(0.5, 1.11),frameon=False)
+
+
+ax4=fig3.add_subplot((gs[:-1,1]))
+#ax4.plot(map(hydrophobicity,sequence_all[pos]))
+#im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
+strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
+#im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
+ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
+ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
+im=ax4.imshow(strong_beneficials,extent=[1,59,68,1])
+ax4.plot([36.,36],[1.,68],c='white',linewidth=1)
+ax4.plot([37.1,37.1],[1.,68],c='white',linewidth=1)
+ax4.set_xlabel(r'Sequence position',fontsize=12)
+ttl=ax4.set_title(r'Possible Mutations')
+ttl.set_position([0.5,.98])
+ax4.xaxis.set_label_coords(0.5,-0.1)
+#axins = inset_axes(ax4,
+#                   width="100%",  # width = 5% of parent_bbox width
+#                   height="5%",  # height : 50%
+#                   loc='lower center',
+#                   bbox_to_anchor=(0, -0.25, 1, 1),
+#                   bbox_transform=ax4.transAxes,
+#                   borderpad=0,
+#                   )
+#fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
+#ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
+#ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
+
+ax1=fig3.add_subplot(gs[2,0])
+ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
+ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
+ax1.plot(chance_complete_example,'k',label=r'$\%$ Complete')
+ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
+ax1.set_xticklabels([])
+ax1.legend(ncol=2,fontsize=6,loc="upper center",framealpha=0.5)
+ax1.set_xlabel(r'Substitution number',fontsize=12)
+
+ax3=fig3.add_subplot(gs[2,1])
+ax3.plot(map(hydrophobicity,sequence_all[pos]))
+ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
+ax3.set_ylim([0.5,1])
+#ax3.set_yticklabels(['.5','','1'])
+ax3.set_xlabel(r'Substitution number',fontsize=12)
+
+plt.tight_layout(h_pad=-1.)
+plt.tight_layout()
+
 
 #===========================================================
-#Hydrophobocity vs time
-#dataframes for pandas/seaborn
+#Hydrophobicity & mutation effects over time (Fig 5)
+#===========================================================
 
-#hydrophobicity, fitness and mutation effects of mutations that occured 
+#easier to work with dataframes for these plots
+#hydrophobicity, fitness and mutation effects of mutations that fixed 
 df_complete=pd.DataFrame(np.concatenate([np.array(zip(range(path_length(structure_all[_])),\
     [mutations[_][i][mutation_positions(sequence_all[_])[i]] for i in range(path_length(structure_all[_]))],\
     map(hydrophobicity,sequence_all[_][1:path_length(structure_all[_])+1]),\
@@ -288,6 +371,9 @@ fixed_mutation_structure=np.concatenate([np.array(_)[1:path_length(_)+1,:2]-np.a
 steps=np.concatenate([np.array(np.sort(range(1,path_length(structure_all[_])+1))) for _ in incomplete_pos])
 df_fms_incomplete=pd.DataFrame({'steps':steps,'dS':fixed_mutation_structure[:,0],'dA':fixed_mutation_structure[:,1]})
 
+
+#===========================================================
+#Hydrophobocity vs time
 
 fig3 = plt.figure(figsize=[6,4.],dpi=300,constrained_layout=True)
 gs = gridspec.GridSpec(nrows=10, ncols=4, figure=fig3)
@@ -364,7 +450,7 @@ step=10
 plt.plot([0,0],[10,-10],'k',linewidth=1)
 plt.plot([-10,10],[0,0],'k',linewidth=1)
 plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],s=1,c='C3',zorder=4)
-plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],s=1,c='C0',zorder=3)
+plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],marker='x',s=1,c='C0',zorder=3)
 plt.ylabel('-$\Delta\overline{A}$',fontsize=12)
 plt.xlim([-2,5])
 plt.ylim([-2,10])
@@ -385,83 +471,5 @@ plt.xlim([-2,5])
 plt.ylim([-2,10])
 
 ax5.annotate('30th Substitution',[0.0,1.1],xycoords='axes fraction',fontsize=8)
-
-
-
-#===========================================================
-#Backtracking
-#===========================================================
-
-long_path_pos=[_ for pos,_ in enumerate(complete_pos) if path_length(structure_all[_])>60]
-pos=long_path_pos[0]
-chance_complete_example=map(lambda x: chance_complete(x,1000),sequence_all[pos][:path_length(structure_all[pos])+1])
-position_data=mutation_positions(sequence_all[pos])
-structure_data=np.array(structure_all[pos])[:,:-1]
-structure_data[:,1]=-structure_data[:,1]
-
-#from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-from matplotlib.patches import Patch
-
-fig3 = plt.figure(figsize=[6,5],constrained_layout=True,dpi=300)
-gs = gridspec.GridSpec(nrows=3, ncols=2, figure=fig3)
-
-ax2=fig3.add_subplot((gs[:-1,0]))
-ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
-ax2.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
-im=ax2.imshow(np.array(sequence_all[pos])[0:-1,1:-1],extent=[1,59,68,1],cmap='binary')
-ax2.set_xlabel(r'Sequence position',fontsize=12)
-ax2.set_ylabel(r'Substitution number',fontsize=12)
-ax2.xaxis.set_label_coords(0.5,-0.1)
-
-legend_elements = [Patch(facecolor='k', edgecolor='k',label='Hydrophobic'),
-                   Patch(facecolor='white', edgecolor='k',label='Polar')]
-
-ax2.legend(handles=legend_elements, ncol=2, loc='upper center',fontsize=10,bbox_to_anchor=(0.5, 1.11),frameon=False)
-
-
-ax4=fig3.add_subplot((gs[:-1,1]))
-#ax4.plot(map(hydrophobicity,sequence_all[pos]))
-#im=ax4.imshow(np.arctan(mutations[pos])/np.arctan(1e6),extent=[2,58,69,1])
-strong_beneficials=np.array([map(lambda x: 1 if x>=1 else (-1 if x<=-1 else 0),spectrum) for spectrum in mutations[pos]])
-#im=ax4.imshow(strong_beneficials,extent=[2,58,69,1])
-ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'.r',markersize=2)
-ax4.plot(position_data+1.5,np.arange(1.5,len(position_data)+1.5),'r',linewidth=0.5)
-im=ax4.imshow(strong_beneficials,extent=[1,59,68,1])
-ax4.plot([36.,36],[1.,68],c='white',linewidth=1)
-ax4.plot([37.1,37.1],[1.,68],c='white',linewidth=1)
-ax4.set_xlabel(r'Sequence position',fontsize=12)
-ttl=ax4.set_title(r'Possible Mutations')
-ttl.set_position([0.5,.98])
-ax4.xaxis.set_label_coords(0.5,-0.1)
-#axins = inset_axes(ax4,
-#                   width="100%",  # width = 5% of parent_bbox width
-#                   height="5%",  # height : 50%
-#                   loc='lower center',
-#                   bbox_to_anchor=(0, -0.25, 1, 1),
-#                   bbox_transform=ax4.transAxes,
-#                   borderpad=0,
-#                   )
-#fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
-#ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
-#ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
-
-ax1=fig3.add_subplot(gs[2,0])
-ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
-ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
-ax1.plot(chance_complete_example,'k',label=r'$\%$ Complete')
-ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
-ax1.set_xticklabels([])
-ax1.legend(ncol=2,fontsize=6,loc="upper center",framealpha=0.5)
-ax1.set_xlabel(r'Substitution number',fontsize=12)
-
-ax3=fig3.add_subplot(gs[2,1])
-ax3.plot(map(hydrophobicity,sequence_all[pos]))
-ax3.set_ylabel(r'Hydrophobicity',fontsize=12)
-ax3.set_ylim([0.5,1])
-#ax3.set_yticklabels(['.5','','1'])
-ax3.set_xlabel(r'Substitution number',fontsize=12)
-
-plt.tight_layout(h_pad=-1.)
-plt.tight_layout()
 
 
