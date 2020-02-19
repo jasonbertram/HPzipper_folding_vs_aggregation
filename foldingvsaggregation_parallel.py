@@ -5,26 +5,29 @@ import dask.multiprocessing
 import cPickle
 import sys
 
-#from dask.distributed import Client
-#from dask_mpi import initialize
+#uses dask to compute fitness of all possible mutations in parallel
+#at most use all the cores on one node, couldn't get multinode dask to work reliably
+#run multiple calls of this script across different nodes to run multiple paths in parallel
 
-#initialize()
-#client=Client()
 
-#L=int(sys.argv[1])-1
-L=60
+L=int(sys.argv[1])
+#number of zipped conformations used to estimate fitness
 sample_size=1000
-alpha=0.
+alpha=1.0
+#odds of H vs P residues in initial sequence
 odds=5
 print "alpha=",alpha
 print "L=",L
 
 start=time.time()
 
-sequence_history=[generate_initial_sequence_connected(L,odds)]
+#Initial sequence used to generate Fig 4 in Bertram and Masel, Genetics, 2020
 #sequence_history=[np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1,
 #       1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1,
 #       1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1])]
+
+
+sequence_history=[generate_initial_sequence_connected(L,odds)]
 mutation_history=[]
 structure_history=[F(sequence_history[-1],alpha,sample_size)]
 for i in range(200):
@@ -35,40 +38,9 @@ for i in range(200):
     mutant_fitnesses=np.sum(Fvalues[:-1,:-1],1)
     mutation_effects=(mutant_fitnesses-original_fitness)        
     if np.max(mutation_effects)<0:
-        #===========================
-        #Valley Crossing
-        #===========================
-        """
         
-        Fvalues2ndorder=[]
-        for pos in range(L):
-            working_sequence=mutate(sequence_history[-1],pos)
-            values=[delayed(Fpar)(x) for x in [mutate(working_sequence,_) for _ in range(L) if _!=pos]]
-            Fvalues2ndorder.append(np.array(compute(*values, scheduler='processes')))
-    
-        Fvalues2ndorder=np.array(Fvalues2ndorder)
-        mutant_fitnesses2ndorder=np.sum(Fvalues2ndorder[:,:,:],2)
-        possible_valleys=np.array([[first,second,fval] for first,_ in enumerate(mutant_fitnesses2ndorder) for second,fval in enumerate(_) if np.max(_)>original_fitness and fval>original_fitness])
-        
-        if len(possible_valleys)==0:
-            print "stuck"
-            break
-        
-        valley_crossing=map(int,possible_valleys[np.argsort(possible_valleys[:,2])[-1]][:-1])
-        
-        structure_history.append(Fvalues[valley_crossing[0]])
-        structure_history.append(Fvalues2ndorder[valley_crossing[0],valley_crossing[1]])
-        
-        sequence_history.append(mutate(sequence_history[-1],valley_crossing[0]))
-        sequence_history.append(mutate(sequence_history[-1],valley_crossing[1]+int(first<second)))
-        
-        print "valley crossing!", valley_crossing
-        print "Delta F=", np.sum(structure_history[-1][:-1])-original_fitness
-        """
-        #===========================
-        #Improved estimate of current fitness
-        #===========================
-        
+        #Improve estimate of current fitness
+                
         values=[delayed(F,pure=True,traverse=False)(sequence_history[-1],alpha,sample_size) for _ in range(L/10)]
         Fcurrentvalues=np.array(compute(*values, scheduler='processes'))
         current_fitnesses=np.sum(Fcurrentvalues[:,:-1],1)
@@ -81,7 +53,6 @@ for i in range(200):
     mutation_history.append(mutation_effects)
     beneficials=[pos for pos,_ in enumerate(mutation_effects) if _>=0]
     mutation_position=np.random.choice(beneficials)
-    #mutation_position=np.argmax(mutation_effects)
     print 'Mutation effect: ', mutation_effects[mutation_position]
     structure_history.append(Fvalues[mutation_position])
     sequence_history.append(mutate(sequence_history[-1],mutation_position+1))

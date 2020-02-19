@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import matplotlib.gridspec as gridspec
 from zip_functions import *
 from analysis_functions import *
@@ -43,13 +42,15 @@ def scale_points(x,y):
 #Data for random initial vs final
 #===============================================
 
-with open ('fold_degeneracy_properties_random_2.0','r') as fin:
+#For Fig S1/S2 replace with one of these and run code below for Fig 2
+#with open ('fold_degeneracy_properties_random_0.5','r') as fin:
+#with open ('fold_degeneracy_properties_random_2.0','r') as fin:
+with open ('fold_degeneracy_properties_random_1.0','r') as fin:
     sequence_all=cPickle.load(fin)
     structure_all=cPickle.load(fin)
     chance_complete_initial=cPickle.load(fin)
     chance_complete_final=cPickle.load(fin)
     mutations=cPickle.load(fin)
-#    fold_degen_final=cPickle.load(fin)
 
 structure_all=np.array(structure_all)
 sequence_all=np.array(sequence_all)
@@ -312,17 +313,6 @@ ax4.set_xlabel(r'Sequence position',fontsize=12)
 ttl=ax4.set_title(r'Possible Mutations')
 ttl.set_position([0.5,.98])
 ax4.xaxis.set_label_coords(0.5,-0.1)
-#axins = inset_axes(ax4,
-#                   width="100%",  # width = 5% of parent_bbox width
-#                   height="5%",  # height : 50%
-#                   loc='lower center',
-#                   bbox_to_anchor=(0, -0.25, 1, 1),
-#                   bbox_transform=ax4.transAxes,
-#                   borderpad=0,
-#                   )
-#fig3.colorbar(im, cax=axins, orientation="horizontal",ticks=[0])
-#ax4.annotate(r'$-$',[0.2,-0.32],xycoords='axes fraction',fontsize=12)
-#ax4.annotate(r'$+$',[0.8,-0.32],xycoords='axes fraction',fontsize=12)
 
 ax1=fig3.add_subplot(gs[2,0])
 ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
@@ -449,8 +439,8 @@ step=10
 #plt.plot([-10,10],[10,-10],'k',linewidth=1)
 plt.plot([0,0],[10,-10],'k',linewidth=1)
 plt.plot([-10,10],[0,0],'k',linewidth=1)
-plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],s=1,c='C3',zorder=4)
-plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],marker='x',s=1,c='C0',zorder=3)
+plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],marker='x',s=3,c='C3',zorder=4,linewidth=0.3)
+plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],s=1,c='C0',zorder=3)
 plt.ylabel('-$\Delta\overline{A}$',fontsize=12)
 plt.xlim([-2,5])
 plt.ylim([-2,10])
@@ -465,7 +455,7 @@ step=30
 #plt.plot([-10,10],[10,-10],'k',linewidth=1)
 plt.plot([0,0],[10,-10],'k',linewidth=1)
 plt.plot([-10,10],[0,0],'k',linewidth=1)
-plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],s=1,c='C3',zorder=4)
+plt.scatter(df_fms_complete[df_fms_complete['steps']==step]['dS'],df_fms_complete[df_fms_complete['steps']==step]['dA'],marker='x',s=3,c='C3',zorder=4,linewidth=0.3)
 plt.scatter(df_fms_incomplete[df_fms_incomplete['steps']==step]['dS'],df_fms_incomplete[df_fms_incomplete['steps']==step]['dA'],s=1,c='C0',zorder=3)
 plt.xlim([-2,5])
 plt.ylim([-2,10])

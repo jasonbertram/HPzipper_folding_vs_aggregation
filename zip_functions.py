@@ -20,12 +20,14 @@ def mutate(sequence,position):
         temp[position]=1
     return temp
 
+#Random sequence with fixed H
 def generate_initial_sequence(L,H):
     temp=np.array(L*[0])
     #1 for hydrophobic, 0 for polar
     temp[np.random.choice(L,size=int(H*L),replace=False)]=1
     return temp
 
+#Random sequence with specified H vs P odds (used in Bertam and Masel, Genetics, 2020)
 def generate_initial_sequence_connected(L,odds):
     temp=np.array([1]+(L-2)*[0]+[1])
     temp[1]=np.random.randint(2)
@@ -182,8 +184,9 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
         #matrix of shortest paths
         shortest_paths=csgraph.dijkstra(contact_graph,indices=candidate_nodes)
         
+        #effective contact order of 3 and at least one unzipped
         candidate_contacts=np.array([[candidate_nodes[x],y] for (x,y),z in np.ndenumerate(shortest_paths) 
-            if z==3. and (candidate_nodes[x] not in zipped or y not in zipped) and sequence[y]==1]) #effective contact order of 3 and at least one unzipped
+            if z==3. and (candidate_nodes[x] not in zipped or y not in zipped) and sequence[y]==1]) 
         
         #omit contacts that are incompatible with existing contacts
         possible_contacts={}
@@ -218,12 +221,14 @@ def HPzip(sequence,nucleation_contact,total_length,left_bound):
 
     return contact_count,contacts_all,zipped,locations
 
-
+#zip sequence using the set of possible_nucleations
+#can handle multi-nucleation
 def zipped_structure(sequence,possible_nucleations,nucleation_position):
     contact_count_global=0
     zipped_global=set()
     unzipped_nucleation_positions=range(len(possible_nucleations))
     H_exposure_global={position:2+int(position==len(sequence)-1)+int(position==0) for position,residue in enumerate(sequence) if residue==1}
+    
     while 1:
         nucleation_contact=np.array([possible_nucleations[nucleation_position],possible_nucleations[nucleation_position]+3])
         #only pass unzipped fragments to HPzip for computational efficiency
@@ -269,6 +274,7 @@ def zipped_structure(sequence,possible_nucleations,nucleation_position):
                 
     return contact_count_global, np.sum(H_exposure_global.values()),len(zipped_global)/float(len(sequence))
             
+#returns \bar{S},\bar{A} and a measure of the percentage folded (not used in Bertram and Masel)
 def F(sequence,alpha,sample_size):
     triplet_totals=[np.sum(sequence[position:position+3]) for position in range(len(sequence)-3)]
     if min(triplet_totals)==0:
@@ -278,7 +284,7 @@ def F(sequence,alpha,sample_size):
         exposure_counts=np.zeros(sample_size)
         percent_ordered=np.zeros(sample_size)
         possible_nucleations=[[position for position,_ in enumerate(sequence[:-3]) if all(sequence[[position,position+3]])][0]]
-        #cycle through initating nucleation contacts to reduce sample variance
+        #cycle through nucleating contacts to reduce sample variance
         count=0
         for _ in itertools.cycle(range(len(possible_nucleations))):
             if count==sample_size:

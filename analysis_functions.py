@@ -80,7 +80,7 @@ def plot_folded_structure(sequence):
         col_map={0:'w',1:'k'}
         plt.plot([len(sequence)],[len(sequence)],'r',markersize=10,markeredgecolor='r')
         for _ in locations:
-            #plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
+            plt.text(locations[_][0]+0.05,locations[_][1]+0.05,str(_),fontsize=14)
             plt.plot(locations[_][0],locations[_][1],'o',color=col_map[sequence[_]],markersize=8,markeredgecolor='k')
             plt.axis('off')
 
