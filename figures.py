@@ -252,7 +252,7 @@ ax1.scatter(A_all[:,0],A_all[:,1],s=2*A_all[:,2],zorder=0,c='C3')
 ax1.set_xlabel(r'Hamming distance / $L$',fontsize=12)
 ax1.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 #ax1.yaxis.set_label_coords(-0.22,0.5)
-ax1.annotate('A',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+ax1.annotate('A',[0.01,0.87],xycoords='axes fraction',fontsize=12)
 
 #===========================================================
 #Hamming vs steps
@@ -264,7 +264,7 @@ ax2.scatter(hamming_pl[:,1]/L,hamming_pl[:,0]/L,s=8*hamming_pl[:,2],c='r',zorder
 
 ax2.set_ylabel(r'Path Length / $L$',fontsize=12)
 ax2.set_xlabel(r'Hamming distance / $L$',fontsize=12)
-ax2.annotate('B',[0.01,0.9],xycoords='axes fraction',fontsize=12)
+ax2.annotate('B',[0.01,0.87],xycoords='axes fraction',fontsize=12)
 
 fig2.tight_layout()
 
