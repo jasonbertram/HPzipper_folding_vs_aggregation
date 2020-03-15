@@ -80,7 +80,7 @@ fig1, ((ax1,ax2,ax3),(ax4,ax5,ax6)) = plt.subplots(nrows=2,ncols=3,figsize=[7.5,
 
 A_all=scale_points(np.sum(initial_structures[incomplete_pos,:2],1),np.sum(final_structures[incomplete_pos,:2],1))
 
-#ax1.plot([-2,0.],[-2,0.],'k',zorder=-1)
+ax1.plot([-2,0.],[-2,0.],'k',zorder=-1)
 ax1.scatter(A_all[:,0]/L,A_all[:,1]/L,s=2*A_all[:,2],zorder=0)
 
 A_pl=scale_points(np.sum(initial_structures[complete_pos,:2],1),np.sum(final_structures[complete_pos,:2],1))
@@ -89,12 +89,12 @@ ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=-1,c='C3')
 A_pl=scale_points(np.sum(initial_structures[not_incomplete_complete_pos,:2],1),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax1.scatter(A_pl[:,0]/L,A_pl[:,1]/L,s=2*A_pl[:,2],zorder=1)
 
-#ax1.set_xlim([-2,0.])
-#ax1.set_ylim([-1,0.6])
+ax1.set_xlim([-2,0.])
+ax1.set_ylim([-1,0.6])
 ax1.set_xlabel(r'Initial Fitness / $L$',fontsize=12)
 ax1.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax1.yaxis.set_label_coords(-0.22,0.5)
-ax1.annotate('A',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+#ax1.annotate('A',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 #=========================================================
 #Delta F vs path length
@@ -115,7 +115,7 @@ ax2.set_xlim([0,1.])
 ax2.set_xlabel(r'Path length / $L$',fontsize=12)
 ax2.set_ylabel(r'$\Delta$ Fitness / $L$',fontsize=12)
 ax2.yaxis.set_label_coords(-0.22,0.5)
-ax2.annotate('B',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+#ax2.annotate('B',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 #===============================================
 #Fitness vs hydro initial
@@ -130,11 +130,11 @@ hydro_pl=scale_points(map(hydrophobicity,initial_sequences[not_incomplete_comple
 ax3.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=3)
 
 #ax3.set_xlim([0.4,1.8])
-#ax3.set_ylim([-1,0.6])
+ax3.set_ylim([-1,0.6])
 ax3.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax3.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax3.yaxis.set_label_coords(-0.22,0.5)
-ax3.annotate('C',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+#ax3.annotate('C',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 #===============================================
 #Fitness vs hydro final
@@ -150,11 +150,11 @@ ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=0,c='C3')
 hydro_pl=scale_points(map(hydrophobicity,final_sequences[not_incomplete_complete_pos]),np.sum(final_structures[not_incomplete_complete_pos,:2],1))
 ax4.scatter(hydro_pl[:,0],hydro_pl[:,1]/L,s=2*hydro_pl[:,2],zorder=1)
 
-#ax4.set_ylim([-1,0.6])
+ax4.set_ylim([-1,0.6])
 ax4.set_xlabel(r'Final Hydrophobicity',fontsize=12)
 ax4.set_ylabel(r'Final Fitness / $L$',fontsize=12)
 ax4.yaxis.set_label_coords(-0.22,0.5)
-ax4.annotate('D',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+#ax4.annotate('D',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 #===============================================
 #Hydrophobicity
@@ -175,7 +175,7 @@ ax5.set_ylim([0.3,1.])
 ax5.set_xlabel(r'Initial Hydrophobicity',fontsize=12)
 ax5.set_ylabel(r'Final Hydrophobicity', fontsize=12)
 ax5.yaxis.set_label_coords(-0.22,0.5)
-ax5.annotate('E',[0.05,0.9],xycoords='axes fraction',fontsize=12)
+#ax5.annotate('E',[0.05,0.9],xycoords='axes fraction',fontsize=12)
 
 #===============================================
 #Clustering
@@ -322,7 +322,7 @@ ax1.plot(structure_data[:,0]/L,label=r'$\overline{S}/L$')
 ax1.plot(structure_data[:,1]/L,label=r'$\overline{A}/L$')
 ax1.plot(chance_complete_example,'k',label=r'$\%$ Complete')
 ax1.set_ylabel(r'$\overline{S}/L$, $\overline{A}/L$',fontsize=12)
-ax1.set_xticklabels([])
+#ax1.set_xticklabels([])
 ax1.legend(ncol=2,fontsize=6,loc="upper center",framealpha=0.5)
 ax1.set_xlabel(r'Substitution number',fontsize=12)
 
